@@ -17,7 +17,7 @@ import com.alibaba.dashscope.utils.JsonUtils;
  */
 public class Main {
     public static GenerationResult callWithMessage() throws ApiException, NoApiKeyException, InputRequiredException {
-        Generation gen = new Generation();
+        Generation gen = new Generation();// 初始化模型
         Message systemMsg = Message.builder()
                 .role(Role.SYSTEM.getValue())
                 .content("You are a helpful assistant.")
