@@ -10,6 +10,7 @@ import java.util.Map;
 
 public class MessageConverter {
 
+    // Message -> ChatMessage
     public static ChatMessage toChatMessage(Message message, String conversationId) {
         return ChatMessage.builder()
                 .conversationId(conversationId)
@@ -19,6 +20,7 @@ public class MessageConverter {
                 .build();
     }
 
+    // ChatMessage -> Message
     public static Message toMessage(ChatMessage chatMessage) {
         ChatMessage.MessageType messageType = chatMessage.getMessageType();
         String text = chatMessage.getContent();

@@ -11,7 +11,7 @@ import java.util.List;
 
 @Component
 public class ChatMessageRepository extends ServiceImpl<ChatMessageMapper, ChatMessage> {
-    
+
     public List<ChatMessage> listByConversationId(String conversationId) {
         LambdaQueryWrapper<ChatMessage> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ChatMessage::getConversationId, conversationId)
