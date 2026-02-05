@@ -24,11 +24,10 @@ public class MessageConverter {
     public static Message toMessage(ChatMessage chatMessage) {
         ChatMessage.MessageType messageType = chatMessage.getMessageType();
         String text = chatMessage.getContent();
-        Map<String, Object> metadata = chatMessage.getMetadata();
         
         return switch (messageType) {
             case USER -> new UserMessage(text);
-            case ASSISTANT -> new AssistantMessage(text);
+            case ASSISTANT -> new AssistantMessage(text, chatMessage.getMetadata());
             case SYSTEM -> new SystemMessage(text);
             case TOOL -> new UserMessage(text);
         };

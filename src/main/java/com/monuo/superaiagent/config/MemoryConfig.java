@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Slf4j
 @Configuration
-public class MemConfig {
+public class MemoryConfig {
 
     /**
      * ChatMemory 聊天对话记忆的存储
