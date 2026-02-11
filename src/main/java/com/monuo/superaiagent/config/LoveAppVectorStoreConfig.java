@@ -1,5 +1,6 @@
 package com.monuo.superaiagent.config;
 
+import com.alibaba.cloud.ai.dashscope.embedding.DashScopeEmbeddingModel;
 import com.monuo.superaiagent.rag.LoveAppDocumentLoader;
 import jakarta.annotation.Resource;
 import org.springframework.ai.document.Document;
@@ -21,7 +22,7 @@ public class LoveAppVectorStoreConfig {
     private LoveAppDocumentLoader loveAppDocumentLoader;
 
     @Bean
-    VectorStore loveAppVectorStore(EmbeddingModel dashscopeEmbeddingModel) {
+    VectorStore loveAppVectorStore(DashScopeEmbeddingModel dashscopeEmbeddingModel) {
         SimpleVectorStore simpleVectorStore = SimpleVectorStore.builder(dashscopeEmbeddingModel)
                 .build();
         // 加载文档

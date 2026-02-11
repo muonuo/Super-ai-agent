@@ -1,11 +1,14 @@
 spring:
   application:
-   name: Super-ai-agent
+    name: Super-ai-agent
+
+  # 主数据源（MySQL - 用于 MyBatis-Plus）
   datasource:
     url: jdbc:mysql://localhost:3306/super_ai_agent?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
     password: 1234
     driver-class-name: com.mysql.cj.jdbc.Driver
+
   ai:
     dashscope:
       api-key: ${DASHSCOPE_API_KEY}
@@ -13,6 +16,18 @@ spring:
         options:
           model: qwen3-max
           temperature: 0.8
+      embedding:
+        options:
+          model: text-embedding-v4
+          dimensions: 1536
+
+# PGVector 专用数据源配置（PostgreSQL）
+pgvector:
+  datasource:
+    jdbc-url: jdbc:postgresql://rm-cn-g4t4n6auf000118o.rwlb.rds.aliyuncs.com:5432/Super_ai_agent
+    username: my_root
+    password: ${PGVECTOR_PASSWORD}
+    driver-class-name: org.postgresql.Driver
 
 mybatis-plus:
   configuration:

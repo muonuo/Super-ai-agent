@@ -3,15 +3,28 @@ spring:
     name: Super-ai-agent
   profiles:
     active: local
-#  main:
-#    allow-bean-definition-overriding: true
-#  ai:
-#    ollama:
-#      base-url: http://localhost:11434
-#      chat:
-#        model: deepseek-r1:8b
-#        options:
-#          temperature: 0.7
+#  datasource:
+#    url: jdbc:postgresql://rm-cn-g4t4n6auf000118o.rwlb.rds.aliyuncs.com:5432/Super_ai_agent
+#    username: my_root
+#    password: ${PGVECTOR_PASSWORD}
+#    ai:
+#      vectorstore:
+#        pgvector:
+#          index-type: HNSW
+#          dimensions: 1024
+#          distance-type: COSINE_DISTANCE
+#          max-document-batch-size: 10000 # Optional: Maximum number of documents per batch
+#          initialize-schema: true
+
+  #  main:
+  #    allow-bean-definition-overriding: true
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        model: qwen3:8b
+        options:
+          temperature: 0.7
 server:
   port: 8123
   servlet:
