@@ -16,10 +16,14 @@ import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 @Component
@@ -207,5 +211,37 @@ public class LoveApp {
         log.info("content: {}", content);
         return content;
     }
+
+    //AI 调用工具的能力
+    @Resource
+    private ToolCallback[] allTools;
+
+    /**
+     * AI 恋爱报告功能（支持调用工具）
+     *
+     * @param message 用户消息
+     * @param chatId  对话ID
+     * @return 恋爱报告
+     */
+    public String doChatWithTools(String message, String chatId) {
+        // 构建工具上下文
+        Map<String, Object> toolContext = new HashMap<>();
+        toolContext.put("chatId", chatId);
+        toolContext.put("timestamp", System.currentTimeMillis());
+
+        String content = chatClient
+                .prompt()
+                .user(message)
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
+                // 开启日志，便于观察效果
+                .advisors(new MyLoggerAdvisor())
+                .toolCallbacks(allTools)
+                .toolContext(toolContext)
+                .call()
+                .content();
+        log.info("content: {}", content);
+        return content;
+    }
+
 
 }

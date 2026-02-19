@@ -11,7 +11,7 @@ import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
 
-@Component
+//@Component
 @Slf4j
 public class BaiduTranslateUtil {
 

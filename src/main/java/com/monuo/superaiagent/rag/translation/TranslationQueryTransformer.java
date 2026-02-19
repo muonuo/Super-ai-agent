@@ -6,7 +6,7 @@ import org.springframework.ai.rag.preretrieval.query.transformation.QueryTransfo
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-@Component
+//@Component
 @Slf4j
 public class TranslationQueryTransformer implements QueryTransformer {
 
