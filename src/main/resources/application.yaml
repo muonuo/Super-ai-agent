@@ -3,18 +3,18 @@ spring:
     name: Super-ai-agent
   profiles:
     active: local
-#  datasource:
-#    url: jdbc:postgresql://rm-cn-g4t4n6auf000118o.rwlb.rds.aliyuncs.com:5432/Super_ai_agent
-#    username: my_root
-#    password: ${PGVECTOR_PASSWORD}
-#    ai:
-#      vectorstore:
-#        pgvector:
-#          index-type: HNSW
-#          dimensions: 1024
-#          distance-type: COSINE_DISTANCE
-#          max-document-batch-size: 10000 # Optional: Maximum number of documents per batch
-#          initialize-schema: true
+  #  datasource:
+  #    url: jdbc:postgresql://rm-cn-g4t4n6auf000118o.rwlb.rds.aliyuncs.com:5432/Super_ai_agent
+  #    username: my_root
+  #    password: ${PGVECTOR_PASSWORD}
+  #    ai:
+  #      vectorstore:
+  #        pgvector:
+  #          index-type: HNSW
+  #          dimensions: 1024
+  #          distance-type: COSINE_DISTANCE
+  #          max-document-batch-size: 10000 # Optional: Maximum number of documents per batch
+  #          initialize-schema: true
 
   #  main:
   #    allow-bean-definition-overriding: true
@@ -37,6 +37,15 @@ spring:
       translation:
         from-lang: auto
         to-lang: zh
+    mcp:
+      client:
+        sse:
+          connections:
+            server1:
+              url: http://localhost:8127
+#        stdio:
+#          servers-configuration: classpath:mcp-servers.json
+
 server:
   port: 8123
   servlet:

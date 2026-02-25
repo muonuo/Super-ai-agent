@@ -18,6 +18,7 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.tool.ToolCallback;
+import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Component;
 
@@ -242,6 +243,32 @@ public class LoveApp {
         log.info("content: {}", content);
         return content;
     }
+
+    //AI 调用MCP服务
+    @Resource
+    private ToolCallbackProvider toolCallbackProvider;
+
+    /**
+     * AI 恋爱报告功能（调用MCP服务）
+     *
+     * @param message 用户消息
+     * @param chatId  对话ID
+     * @return 恋爱报告
+     */
+    public String doChatWithMcp(String message, String chatId) {
+        String content = chatClient
+                .prompt()
+                .user(message)
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
+                // 开启日志，便于观察效果
+                .advisors(new MyLoggerAdvisor())
+                .toolCallbacks(toolCallbackProvider)
+                .call()
+                .content();
+        log.info("content: {}", content);
+        return content;
+    }
+
 
 
 }

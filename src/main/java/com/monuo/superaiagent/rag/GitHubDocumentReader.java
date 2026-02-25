@@ -25,7 +25,7 @@ public class GitHubDocumentReader implements DocumentReader {
             @Value("${spring.ai.rag.github.owner:alibaba}") String repoOwner,
             @Value("${spring.ai.rag.github.repo:spring-ai-alibaba}") String repoName,
             @Value("${spring.ai.rag.github.branch:main}") String branch,
-            @Value("${spring.ai.rag.github.token:}") String githubToken) {
+            @Value("${spring.ai.rag.github.token}") String githubToken) {
         this.repoOwner = repoOwner;
         this.repoName = repoName;
         this.branch = branch;
