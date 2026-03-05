@@ -86,9 +86,19 @@ public class ToolCallAgent extends ReActAgent {
                     )
                     .collect(Collectors.joining("\n"));
             log.info(toolCallInfo);
+
+            // 记录工具调用，用于避免重复调用
+            for (AssistantMessage.ToolCall toolCall : toolCallList) {
+                recordAttemptedTool(toolCall.name());
+            }
+
+            // 记录当前思考用于循环检测
+            recordResponse(result);
             if (toolCallList.isEmpty()) {
                 // 只有不调用工具时，才记录助手消息
                 getMessageList().add(assistantMessage);
+                // 检测是否陷入循环（没有工具调用但响应重复）
+                checkAndHandleStuck();
                 return false;
             } else {
                 // 需要调用工具时，无需记录助手消息，因为调用工具时会自动记录
@@ -124,12 +134,19 @@ public class ToolCallAgent extends ReActAgent {
                 .anyMatch(response -> response.name().equals("doTerminate"));
         if (terminateToolCalled) {
             // 任务结束，更改状态
-    setState(AgentState.FINISHED);
+            setState(AgentState.FINISHED);
         }
         String results = toolResponseMessage.getResponses().stream()
                 .map(response -> "工具 " + response.name() + " 完成了它的任务！结果: " + response.responseData())
                 .collect(Collectors.joining("\n"));
         log.info(results);
+
+        // 记录工具执行结果用于循环检测
+        recordResponse(results);
+
+        // 检查是否陷入循环或连续失败
+        checkAndHandleStuck();
+
         return results;
     }
 

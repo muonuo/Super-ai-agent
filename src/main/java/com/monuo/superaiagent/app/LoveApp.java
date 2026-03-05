@@ -7,6 +7,8 @@ import com.monuo.superaiagent.chatmemory.FileBasedChatMemory;
 import com.monuo.superaiagent.constant.SystemConstants;
 import com.monuo.superaiagent.rag.LoveAppRagCustomAdvisorFactory;
 import com.monuo.superaiagent.rag.QueryRewriter;
+import com.monuo.superaiagent.service.QuestionClassifierService;
+import com.monuo.superaiagent.service.QuestionClassifierService.QuestionType;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -17,10 +19,13 @@ import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvi
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.document.Document;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
+import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 
 import java.util.HashMap;
 import java.util.List;
@@ -70,7 +75,7 @@ public class LoveApp {
     //基于数据库的对话记忆
     public LoveApp(ChatModel dashscopeChatModel, DatabaseBasedChatMemory databaseBasedChatMemory) {
         chatClient = ChatClient.builder(dashscopeChatModel)
-                .defaultSystem(SystemConstants.SYSTEM_PROMPT)
+                .defaultSystem(SystemConstants.SYSTEM_PROMPT1)
                 .defaultAdvisors(
                         // 自定义 Advisor，可按需开启
                         new MyLoggerAdvisor(),
@@ -100,7 +105,20 @@ public class LoveApp {
         return content;
     }
 
-    record LoveReport(String title, List<String> suggestions) {
+    /**
+     * AI 基础对话（支持多轮对话记忆，SSE 流式传输）
+     *
+     * @param message
+     * @param chatId
+     * @return
+     */
+    public Flux<String> doChatByStream(String message, String chatId) {
+        return chatClient
+                .prompt()
+                .user(message)
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
+                .stream()
+                .content();
     }
 
     //方式一
@@ -144,8 +162,11 @@ public class LoveApp {
 //        return loveReport;
 //    }
 
-    //方式二
+    record LoveReport(String title, List<String> suggestions) {
 
+    }
+
+    //方式二
     /**
      * AI 恋爱报告功能（实战结构化输出）
      * AI会自动从用户消息中提取用户名
@@ -157,7 +178,7 @@ public class LoveApp {
     public LoveReport doChatWithReport(String message, String chatId) {
         LoveReport loveReport = chatClient
                 .prompt()
-                .system(SystemConstants.SYSTEM_PROMPT + SystemConstants.REPORT_REQUIREMENT)
+                .system(SystemConstants.SYSTEM_PROMPT1 + SystemConstants.REPORT_REQUIREMENT)
                 .user(message)
                 .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
                 .call()
@@ -269,6 +290,87 @@ public class LoveApp {
         return content;
     }
 
+    /**
+     * 问题分类服务
+     */
+    @Resource
+    private QuestionClassifierService questionClassifierService;
+
+    /**
+     * RAG相似度阈值
+     */
+    private static final double RAG_SIMILARITY_THRESHOLD = 0.6;
+
+    /**
+     * 带RAG Fallback的对话方法
+     * 核心策略：
+     * 1. 先判断问题类型
+     * 2. 敏感问题 → 拒绝回答
+     * 3. 通用问题 → 直接用通用LLM回答
+     * 4. 恋爱相关/未知 → 尝试RAG，失败则fallback到通用LLM
+     *
+     * @param message 用户消息
+     * @param chatId  对话ID
+     * @return AI回答
+     */
+    public String doChatWithRagFallback(String message, String chatId) {
+        // 1. 先判断问题类型
+        QuestionType type = questionClassifierService.classify(message);
+        log.info("问题分类结果: {}, 问题: {}", type, message);
+
+        switch (type) {
+            case SENSITIVE:
+                return "抱歉，我无法回答这个问题。";
+
+            case GENERAL:
+                // 通用问题，不走RAG，直接用通用知识回答
+                log.info("通用问题，直接使用通用LLM回答");
+                return doChat(message, chatId);
+
+            case LOVE_RELATED:
+            case UNKNOWN:
+            default:
+                // 尝试RAG，失败则fallback到通用回答
+                return doChatWithRagOrFallback(message, chatId);
+        }
+    }
+
+    /**
+     * RAG失败时fallback到通用LLM
+     *
+     * @param message 用户消息
+     * @param chatId  对话ID
+     * @return AI回答
+     */
+    private String doChatWithRagOrFallback(String message, String chatId) {
+        try {
+            // 先尝试RAG
+            String rewrittenMessage = queryRewriter.doQueryRewrite(message);
+
+            // 直接检索看是否有结果（不经过LLM生成）
+            List<Document> docs = loveAppVectorStore.similaritySearch(
+                    SearchRequest.builder().query(rewrittenMessage).topK(3).build()
+            );
+
+            // 检查是否有相关文档（相似度>0.6）
+            boolean hasRelevantDocs = docs.stream()
+                    .anyMatch(doc -> doc.getScore() >= RAG_SIMILARITY_THRESHOLD);
+
+            if (!hasRelevantDocs) {
+                // RAG无结果，fallback到通用LLM
+                log.info("RAG检索无结果（相似度<{}），fallback到通用LLM", RAG_SIMILARITY_THRESHOLD);
+                return doChat(message, chatId);
+            }
+
+            // 有结果，使用RAG回答
+            log.info("RAG检索到{}条相关文档，使用RAG回答", docs.size());
+            return doChatWithRag(message, chatId);
+
+        } catch (Exception e) {
+            log.error("RAG调用异常，fallback到通用LLM", e);
+            return doChat(message, chatId);
+        }
+    }
 
 
 }

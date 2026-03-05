@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * 查询扩展器 Demo
  */
-@Component
+//@Component
 public class MultiQueryExpanderDemo {
 
     private final ChatClient.Builder chatClientBuilder;

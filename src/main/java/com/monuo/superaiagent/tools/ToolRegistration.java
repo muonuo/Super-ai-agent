@@ -19,23 +19,28 @@ public class ToolRegistration {
     @Resource
     private MailSendTool mailSendTool;
 
+    @Value("${search-api.tavily-api-key}")
+    private String tavilySearchApiKey;
+
     @Bean
     public ToolCallback[] allTools() {
         FileOperationTool fileOperationTool = new FileOperationTool();
         WebSearchTool webSearchTool = new WebSearchTool(searchApiKey);
+        TavilyWebSearchTool tavilyWebSearchTool = new TavilyWebSearchTool(tavilySearchApiKey);
         WebScrapingTool webScrapingTool = new WebScrapingTool();
         ResourceDownloadTool resourceDownloadTool = new ResourceDownloadTool();
         TerminalOperationTool terminalOperationTool = new TerminalOperationTool();
         PDFGenerationTool pdfGenerationTool = new PDFGenerationTool();
         TerminateTool terminateTool = new TerminateTool();
         return ToolCallbacks.from(
-            terminateTool,
-            fileOperationTool,
-            webSearchTool,
-            webScrapingTool,
-            resourceDownloadTool,
-            terminalOperationTool,
-            pdfGenerationTool
+                terminateTool,
+                fileOperationTool,
+//            webSearchTool,
+                tavilyWebSearchTool,
+                webScrapingTool,
+                resourceDownloadTool,
+                terminalOperationTool,
+                pdfGenerationTool
 //            qqEmailSenderTool,
 //            mailSendTool
         );

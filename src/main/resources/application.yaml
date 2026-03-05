@@ -70,6 +70,7 @@ knife4j:
 # searchApi
 search-api:
   api-key: ${SEARCH_API_KEY}
+  tavily-api-key: ${TAVILY_SEARCH_API_KEY}
 # QQ邮箱配置
 qq-email:
   from: ${QQ_EMAIL_FROM:}
