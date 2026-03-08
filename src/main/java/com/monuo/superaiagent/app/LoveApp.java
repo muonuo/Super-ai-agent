@@ -16,6 +16,7 @@ import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
@@ -189,6 +190,7 @@ public class LoveApp {
 
     // AI 恋爱知识库问答功能
     @Resource
+    @Qualifier("pgVectorVectorStore")
     private VectorStore loveAppVectorStore;
 
     @Resource
@@ -214,7 +216,6 @@ public class LoveApp {
                 .prompt()
                 // 使用改写后的查询
                 .user(rewrittenMessage)
-                .advisors(new MyLoggerAdvisor())
                 .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
                 //应用RAG知识库问答
                 .advisors(QuestionAnswerAdvisor.builder(loveAppVectorStore).build())
@@ -236,7 +237,7 @@ public class LoveApp {
 
     //AI 调用工具的能力
     @Resource
-    private ToolCallback[] allTools;
+    private ToolCallback[] loveAppTools;
 
     /**
      * AI 恋爱报告功能（支持调用工具）
@@ -255,9 +256,7 @@ public class LoveApp {
                 .prompt()
                 .user(message)
                 .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
-                // 开启日志，便于观察效果
-                .advisors(new MyLoggerAdvisor())
-                .toolCallbacks(allTools)
+                .toolCallbacks(loveAppTools)
                 .toolContext(toolContext)
                 .call()
                 .content();
@@ -281,8 +280,6 @@ public class LoveApp {
                 .prompt()
                 .user(message)
                 .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
-                // 开启日志，便于观察效果
-                .advisors(new MyLoggerAdvisor())
                 .toolCallbacks(toolCallbackProvider)
                 .call()
                 .content();
@@ -293,8 +290,8 @@ public class LoveApp {
     /**
      * 问题分类服务
      */
-    @Resource
-    private QuestionClassifierService questionClassifierService;
+//    @Resource
+//    private QuestionClassifierService questionClassifierService;
 
     /**
      * RAG相似度阈值
@@ -313,27 +310,27 @@ public class LoveApp {
      * @param chatId  对话ID
      * @return AI回答
      */
-    public String doChatWithRagFallback(String message, String chatId) {
-        // 1. 先判断问题类型
-        QuestionType type = questionClassifierService.classify(message);
-        log.info("问题分类结果: {}, 问题: {}", type, message);
-
-        switch (type) {
-            case SENSITIVE:
-                return "抱歉，我无法回答这个问题。";
-
-            case GENERAL:
-                // 通用问题，不走RAG，直接用通用知识回答
-                log.info("通用问题，直接使用通用LLM回答");
-                return doChat(message, chatId);
-
-            case LOVE_RELATED:
-            case UNKNOWN:
-            default:
-                // 尝试RAG，失败则fallback到通用回答
-                return doChatWithRagOrFallback(message, chatId);
-        }
-    }
+//    public String doChatWithRagFallback(String message, String chatId) {
+//        // 1. 先判断问题类型
+//        QuestionType type = questionClassifierService.classify(message);
+//        log.info("问题分类结果: {}, 问题: {}", type, message);
+//
+//        switch (type) {
+//            case SENSITIVE:
+//                return "抱歉，我无法回答这个问题。";
+//
+//            case GENERAL:
+//                // 通用问题，不走RAG，直接用通用知识回答
+//                log.info("通用问题，直接使用通用LLM回答");
+//                return doChat(message, chatId);
+//
+//            case LOVE_RELATED:
+//            case UNKNOWN:
+//            default:
+//                // 尝试RAG，失败则fallback到通用回答
+//                return doChatWithRagOrFallback(message, chatId);
+//        }
+//    }
 
     /**
      * RAG失败时fallback到通用LLM
@@ -342,35 +339,35 @@ public class LoveApp {
      * @param chatId  对话ID
      * @return AI回答
      */
-    private String doChatWithRagOrFallback(String message, String chatId) {
-        try {
-            // 先尝试RAG
-            String rewrittenMessage = queryRewriter.doQueryRewrite(message);
-
-            // 直接检索看是否有结果（不经过LLM生成）
-            List<Document> docs = loveAppVectorStore.similaritySearch(
-                    SearchRequest.builder().query(rewrittenMessage).topK(3).build()
-            );
-
-            // 检查是否有相关文档（相似度>0.6）
-            boolean hasRelevantDocs = docs.stream()
-                    .anyMatch(doc -> doc.getScore() >= RAG_SIMILARITY_THRESHOLD);
-
-            if (!hasRelevantDocs) {
-                // RAG无结果，fallback到通用LLM
-                log.info("RAG检索无结果（相似度<{}），fallback到通用LLM", RAG_SIMILARITY_THRESHOLD);
-                return doChat(message, chatId);
-            }
-
-            // 有结果，使用RAG回答
-            log.info("RAG检索到{}条相关文档，使用RAG回答", docs.size());
-            return doChatWithRag(message, chatId);
-
-        } catch (Exception e) {
-            log.error("RAG调用异常，fallback到通用LLM", e);
-            return doChat(message, chatId);
-        }
-    }
+//    private String doChatWithRagOrFallback(String message, String chatId) {
+//        try {
+//            // 先尝试RAG
+//            String rewrittenMessage = queryRewriter.doQueryRewrite(message);
+//
+//            // 直接检索看是否有结果（不经过LLM生成）
+//            List<Document> docs = loveAppVectorStore.similaritySearch(
+//                    SearchRequest.builder().query(rewrittenMessage).topK(3).build()
+//            );
+//
+//            // 检查是否有相关文档（相似度>0.6）
+//            boolean hasRelevantDocs = docs.stream()
+//                    .anyMatch(doc -> doc.getScore() >= RAG_SIMILARITY_THRESHOLD);
+//
+//            if (!hasRelevantDocs) {
+//                // RAG无结果，fallback到通用LLM
+//                log.info("RAG检索无结果（相似度<{}），fallback到通用LLM", RAG_SIMILARITY_THRESHOLD);
+//                return doChat(message, chatId);
+//            }
+//
+//            // 有结果，使用RAG回答
+//            log.info("RAG检索到{}条相关文档，使用RAG回答", docs.size());
+//            return doChatWithRag(message, chatId);
+//
+//        } catch (Exception e) {
+//            log.error("RAG调用异常，fallback到通用LLM", e);
+//            return doChat(message, chatId);
+//        }
+//    }
 
 
 }

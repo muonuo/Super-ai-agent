@@ -12,6 +12,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -65,7 +66,48 @@ public abstract class BaseAgent {
 
     // 最大记录最近响应数量
     private int maxRecentResponses = 5;
+
+    // ====== 干预级别枚举 ======
+    public enum InterventionLevel {
+        PROMPT,    // 级别1: 添加提示
+        WARNING,   // 级别2: 强烈警告
+        TERMINATE  // 级别3: 强制终止
+    }
+
+    // ====== 工具调用记录内部类 ======
+    @Data
+    private static class ToolCallRecord {
+        private String toolName;
+        private String argumentsHash;
+        private long timestamp;
+    }
+
+    // ====== 状态报告内部类 ======
+    @Data
+    public static class StuckStatus {
+        private int duplicateCount;
+        private int consecutiveFailures;
+        private long toolCallCount;
+        private long executionTimeMs;
+        private boolean executionTimeout;
+        private boolean isStuck;
+        private List<String> recentResponses;
+    }
+
     // ====== 防死循环相关属性 ======
+
+    // ====== 增强的防循环检测属性 ======
+    // 语义相似度阈值（默认0.8）
+    private double similarityThreshold = 0.8;
+
+    // 工具调用历史（记录完整信息：工具名+参数哈希）
+    private List<ToolCallRecord> toolCallHistory = new ArrayList<>();
+
+    // 执行时间监控
+    private long executionStartTime;
+    private long maxExecutionTimeMs = 300000; // 默认5分钟
+    private boolean executionTimeout = false;
+    // ====== 增强的防循环检测属性 ======
 
     /**
      * 运行代理
@@ -84,25 +126,44 @@ public abstract class BaseAgent {
         state = AgentState.RUNNING;
         // 重置防死循环状态
         resetStuckDetection();
-        // 记录消息上下文  
+        // 记录消息上下文
+        log.info("👤 用户输入: {}", userPrompt);
         messageList.add(new UserMessage(userPrompt));
-        // 保存结果列表  
+        // 保存结果列表
         List<String> results = new ArrayList<>();
+        log.info("Agent starting execution with max time: {}ms", maxExecutionTimeMs);
         try {
             for (int i = 0; i < maxSteps && state != AgentState.FINISHED; i++) {
+                // 检查执行超时
+                if (isExecutionTimeout()) {
+                    executionTimeout = true;
+                    state = AgentState.FINISHED;
+                    log.error("Agent execution timeout after {}ms", getExecutionElapsedTime());
+                    results.add("执行超时，已达到最大执行时间 " + maxExecutionTimeMs + "ms");
+                    break;
+                }
                 int stepNumber = i + 1;
                 currentStep = stepNumber;
-                log.info("Executing step " + stepNumber + "/" + maxSteps);
-                // 单步执行  
+                log.info("Executing step " + stepNumber + "/" + maxSteps + " (elapsed: {}ms)", getExecutionElapsedTime());
+                // 单步执行
                 String stepResult = step();
                 String result = "Step " + stepNumber + ": " + stepResult;
                 results.add(result);
+
+                // 使用增强的循环检测
+                InterventionLevel level = checkAndHandleStuckEnhanced();
+                if (level == InterventionLevel.TERMINATE) {
+                    log.error("Agent terminated due to stuck detection at step {}", stepNumber);
+                    results.add("Agent terminated due to stuck detection");
+                    break;
+                }
             }
-            // 检查是否超出步骤限制  
+            // 检查是否超出步骤限制
             if (currentStep >= maxSteps) {
                 state = AgentState.FINISHED;
                 results.add("Terminated: Reached max steps (" + maxSteps + ")");
             }
+            log.info("Agent execution completed. Total time: {}ms, Steps: {}", getExecutionElapsedTime(), currentStep);
             return String.join("\n", results);
         } catch (Exception e) {
             state = AgentState.ERROR;
@@ -153,11 +214,21 @@ public abstract class BaseAgent {
             messageList.add(new UserMessage(userPrompt));
             // 保存结果列表
             List<String> results = new ArrayList<>();
+            log.info("Agent starting stream execution with max time: {}ms", maxExecutionTimeMs);
             try {
                 for (int i = 0; i < maxSteps && state != AgentState.FINISHED; i++) {
+                    // 检查执行超时
+                    if (isExecutionTimeout()) {
+                        executionTimeout = true;
+                        state = AgentState.FINISHED;
+                        log.error("Agent execution timeout after {}ms", getExecutionElapsedTime());
+                        results.add("执行超时，已达到最大执行时间 " + maxExecutionTimeMs + "ms");
+                        sendSse.accept("执行超时，已达到最大执行时间 " + maxExecutionTimeMs + "ms");
+                        break;
+                    }
                     int stepNumber = i + 1;
                     currentStep = stepNumber;
-                    log.info("Executing step " + stepNumber + "/" + maxSteps);
+                    log.info("Executing step " + stepNumber + "/" + maxSteps + " (elapsed: {}ms)", getExecutionElapsedTime());
                     // 单步执行
                     String stepResult = step();
 
@@ -182,6 +253,15 @@ public abstract class BaseAgent {
                     results.add(result);
                     // 输出当前每一步结构到 SSE
                     sendSse.accept(result);
+
+                    // 使用增强的循环检测
+                    InterventionLevel level = checkAndHandleStuckEnhanced();
+                    if (level == InterventionLevel.TERMINATE) {
+                        log.error("Agent terminated due to stuck detection at step {}", stepNumber);
+                        results.add("Agent terminated due to stuck detection");
+                        sendSse.accept("Agent terminated due to stuck detection");
+                        break;
+                    }
                 }
                 // 检查是否超出步骤限制
                 if (currentStep >= maxSteps) {
@@ -189,6 +269,7 @@ public abstract class BaseAgent {
                     results.add("Terminated: Reached max steps (" + maxSteps + ")");
                     sendSse.accept("执行结束，达到最大步骤 (" + maxSteps + ")");
                 }
+                log.info("Agent stream execution completed. Total time: {}ms, Steps: {}", getExecutionElapsedTime(), currentStep);
                 // 正常完成
                 sseEmitter.complete();
             } catch (Exception e) {
@@ -409,6 +490,273 @@ public abstract class BaseAgent {
         this.consecutiveFailures = 0;
         this.attemptedTools.clear();
         this.recentResponses.clear();
+        this.toolCallHistory.clear();
+        this.executionStartTime = System.currentTimeMillis();
+        this.executionTimeout = false;
     }
     // ====== 防死循环相关方法 ======
+
+    // ====== 增强的防循环检测方法 ======
+
+    /**
+     * 计算两个字符串的 Jaccard 相似度
+     *
+     * @param s1 字符串1
+     * @param s2 字符串2
+     * @return 相似度值（0-1之间）
+     */
+    protected double calculateJaccardSimilarity(String s1, String s2) {
+        if (s1 == null || s2 == null || s1.isEmpty() || s2.isEmpty()) {
+            return 0.0;
+        }
+        // 使用字符级别的 Jaccard 相似度
+        Set<String> set1 = new HashSet<>(Arrays.asList(s1.split("")));
+        Set<String> set2 = new HashSet<>(Arrays.asList(s2.split("")));
+        Set<String> intersection = new HashSet<>(set1);
+        intersection.retainAll(set2);
+        Set<String> union = new HashSet<>(set1);
+        union.addAll(set2);
+        return (double) intersection.size() / union.size();
+    }
+
+    /**
+     * 检查是否存在语义相似的重复响应
+     *
+     * @param response 当前响应
+     * @return 是否存在语义重复
+     */
+    protected boolean isSemanticDuplicate(String response) {
+        if (recentResponses.isEmpty() || response == null) {
+            return false;
+        }
+        for (String recent : recentResponses) {
+            double similarity = calculateJaccardSimilarity(response, recent);
+            log.debug("Similarity between current response and recent: {}", similarity);
+            if (similarity >= similarityThreshold) {
+                log.warn("Detected semantic duplicate with similarity: {}", similarity);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 检查工具调用是否重复（相同工具+相同参数）
+     *
+     * @param toolName   工具名称
+     * @param arguments 工具参数
+     * @return 是否重复调用
+     */
+    protected boolean isToolCallDuplicate(String toolName, String arguments) {
+        if (toolName == null || arguments == null) {
+            return false;
+        }
+        String argsHash = String.valueOf(arguments.hashCode());
+        boolean isDuplicate = toolCallHistory.stream()
+                .anyMatch(r -> r.getToolName().equals(toolName)
+                        && r.getArgumentsHash().equals(argsHash));
+        if (isDuplicate) {
+            log.warn("Detected duplicate tool call: {} with same arguments", toolName);
+        }
+        return isDuplicate;
+    }
+
+    /**
+     * 记录工具调用
+     *
+     * @param toolName   工具名称
+     * @param arguments 工具参数
+     */
+    protected void recordToolCall(String toolName, String arguments) {
+        if (toolName == null) {
+            return;
+        }
+        ToolCallRecord record = new ToolCallRecord();
+        record.setToolName(toolName);
+        record.setArgumentsHash(arguments != null ? String.valueOf(arguments.hashCode()) : "");
+        record.setTimestamp(System.currentTimeMillis());
+        toolCallHistory.add(record);
+        log.debug("Recorded tool call: {} with hash: {}", toolName, record.getArgumentsHash());
+    }
+
+    /**
+     * 检查是否有过多重复的工具调用
+     *
+     * @return 是否过多重复
+     */
+    protected boolean hasTooManyRepeatedToolCalls() {
+        if (toolCallHistory.size() < 3) {
+            return false;
+        }
+        // 检查最近N次调用中是否有相同的工具+参数组合
+        int recentCount = Math.min(toolCallHistory.size(), 5);
+        for (int i = toolCallHistory.size() - recentCount; i < toolCallHistory.size() - 1; i++) {
+            ToolCallRecord current = toolCallHistory.get(i);
+            for (int j = i + 1; j < toolCallHistory.size(); j++) {
+                ToolCallRecord next = toolCallHistory.get(j);
+                if (current.getToolName().equals(next.getToolName())
+                        && current.getArgumentsHash().equals(next.getArgumentsHash())) {
+                    log.warn("Detected repeated tool call pattern: {}", current.getToolName());
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 添加强烈警告提示
+     */
+    protected void addStrongWarning() {
+        String warningPrompt = "【严重警告】检测到重复行为模式！\n" +
+                "你正在重复相同的思考或行动，这可能导致任务无法完成。\n" +
+                "请立即停止这种行为，并尝试以下策略：\n" +
+                "1. 重新分析用户需求和当前状态\n" +
+                "2. 考虑完全不同的解决思路\n" +
+                "3. 如果当前方法不奏效，放弃并尝试新方法\n" +
+                "4. 明确告知用户当前困境，不要重复无效尝试";
+        this.nextStepPrompt = warningPrompt + "\n" + (this.nextStepPrompt != null ? this.nextStepPrompt : "");
+        log.error("Agent detected severe stuck pattern - added strong warning");
+        this.consecutiveFailures = 0;
+    }
+
+    /**
+     * 强制终止代理执行
+     */
+    protected void forceTerminate() {
+        this.state = AgentState.FINISHED;
+        this.executionTimeout = true;
+        log.error("Agent force terminated due to repeated failures");
+    }
+
+    /**
+     * 根据干预级别处理陷入循环的状态
+     *
+     * @param level 干预级别
+     * @return 干预级别
+     */
+    protected InterventionLevel handleStuck(InterventionLevel level) {
+        switch (level) {
+            case PROMPT:
+                handleStuckState();
+                break;
+            case WARNING:
+                addStrongWarning();
+                break;
+            case TERMINATE:
+                forceTerminate();
+                break;
+        }
+        return level;
+    }
+
+    /**
+     * 增强的检查并处理陷入循环的状态
+     *
+     * @return 干预级别（如果有）
+     */
+    protected InterventionLevel checkAndHandleStuckEnhanced() {
+        // 检查执行超时
+        if (System.currentTimeMillis() - executionStartTime > maxExecutionTimeMs) {
+            executionTimeout = true;
+            log.error("Execution timeout detected: {}ms", maxExecutionTimeMs);
+            return handleStuck(InterventionLevel.TERMINATE);
+        }
+
+        // 检查语义重复
+        if (!recentResponses.isEmpty()) {
+            String lastResponse = recentResponses.get(recentResponses.size() - 1);
+            if (isSemanticDuplicate(lastResponse)) {
+                log.warn("Semantic duplicate detected, applying WARNING level intervention");
+                return handleStuck(InterventionLevel.WARNING);
+            }
+        }
+
+        // 检查完全重复
+        if (isRecentResponseDuplicate() || isStuck()) {
+            return handleStuck(InterventionLevel.PROMPT);
+        }
+
+        // 检查工具重复调用
+        if (hasTooManyRepeatedToolCalls()) {
+            log.warn("Too many repeated tool calls, applying WARNING level intervention");
+            return handleStuck(InterventionLevel.WARNING);
+        }
+
+        // 检查连续失败
+        if (hasReachedMaxFailures()) {
+            return handleStuck(InterventionLevel.TERMINATE);
+        }
+
+        return null;
+    }
+
+    /**
+     * 检查执行是否超时
+     *
+     * @return 是否超时
+     */
+    protected boolean isExecutionTimeout() {
+        return executionTimeout || (System.currentTimeMillis() - executionStartTime > maxExecutionTimeMs);
+    }
+
+    /**
+     * 获取当前执行已用时间
+     *
+     * @return 已用时间（毫秒）
+     */
+    protected long getExecutionElapsedTime() {
+        return System.currentTimeMillis() - executionStartTime;
+    }
+
+    /**
+     * 获取详细的循环检测状态报告
+     *
+     * @return 状态报告
+     */
+    public StuckStatus getStuckStatus() {
+        StuckStatus status = new StuckStatus();
+        status.setDuplicateCount(countDuplicates());
+        status.setConsecutiveFailures(consecutiveFailures);
+        status.setToolCallCount(toolCallHistory.size());
+        status.setExecutionTimeMs(getExecutionElapsedTime());
+        status.setExecutionTimeout(executionTimeout);
+        status.setStuck(isStuck() || isRecentResponseDuplicate());
+        status.setRecentResponses(new ArrayList<>(recentResponses));
+        return status;
+    }
+
+    /**
+     * 统计重复次数
+     *
+     * @return 重复次数
+     */
+    private int countDuplicates() {
+        if (recentResponses.isEmpty()) {
+            return 0;
+        }
+        String lastResponse = recentResponses.get(recentResponses.size() - 1);
+        return (int) recentResponses.stream()
+                .filter(r -> r.equals(lastResponse))
+                .count();
+    }
+
+    /**
+     * 设置最大执行时间
+     *
+     * @param maxExecutionTimeMs 最大执行时间（毫秒）
+     */
+    public void setMaxExecutionTimeMs(long maxExecutionTimeMs) {
+        this.maxExecutionTimeMs = maxExecutionTimeMs;
+    }
+
+    /**
+     * 设置相似度阈值
+     *
+     * @param similarityThreshold 相似度阈值
+     */
+    public void setSimilarityThreshold(double similarityThreshold) {
+        this.similarityThreshold = similarityThreshold;
+    }
+    // ====== 增强的防循环检测方法 ======
 }

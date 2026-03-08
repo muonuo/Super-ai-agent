@@ -7,7 +7,7 @@
         "@amap/amap-maps-mcp-server"
       ],
       "env": {
-        "AMAP_MAPS_API_KEY": "你的api key"
+        "AMAP_MAPS_API_KEY": "22a514725b37aefa047280be42120b51"
       }
     },
     "monuo-image-search-mcp-server": {

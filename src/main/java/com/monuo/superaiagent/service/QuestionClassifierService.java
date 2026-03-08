@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
  * 问题分类服务
  * 用于判断用户问题是恋爱相关、通用问题还是敏感问题
  */
-@Service
+//@Service
 @Slf4j
 public class QuestionClassifierService {
 

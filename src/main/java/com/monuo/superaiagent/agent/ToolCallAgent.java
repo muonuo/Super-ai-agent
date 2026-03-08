@@ -90,6 +90,8 @@ public class ToolCallAgent extends ReActAgent {
             // 记录工具调用，用于避免重复调用
             for (AssistantMessage.ToolCall toolCall : toolCallList) {
                 recordAttemptedTool(toolCall.name());
+                // 记录完整工具调用信息（工具名+参数）
+                recordToolCall(toolCall.name(), toolCall.arguments());
             }
 
             // 记录当前思考用于循环检测

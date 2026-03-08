@@ -3,6 +3,7 @@ package com.monuo.superaiagent.controller;
 import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatModel;
 import com.monuo.superaiagent.agent.MonuoManus;
 import com.monuo.superaiagent.app.LoveApp;
+import com.monuo.superaiagent.chatmemory.DatabaseBasedChatMemory;
 import jakarta.annotation.Resource;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.http.MediaType;
@@ -23,10 +24,13 @@ public class AiController {
     private LoveApp loveApp;
 
     @Resource
-    private ToolCallback[] allTools;
+    private ToolCallback[] manusTools;
 
     @Resource
     private DashScopeChatModel dashScopeChatModel;
+
+    @Resource
+    private DatabaseBasedChatMemory databaseBasedChatMemory;
 
     /**
      * 同步调用 AI 恋爱大师应用
@@ -94,13 +98,14 @@ public class AiController {
     /**
      * 流式调用 Manus 超级智能体
      *
-     * @param message
+     * @param message 用户消息
+     * @param chatId  对话ID（用于数据库持久化）
      * @return
      */
     @GetMapping("/manus/chat")
-    public SseEmitter doChatWithManus(String message) {
-        MonuoManus monuoManus = new MonuoManus(allTools, dashScopeChatModel);
-        return monuoManus.runStream(message);
+    public SseEmitter doChatWithManus(String message, String chatId) {
+        MonuoManus monuoManus = new MonuoManus(manusTools, dashScopeChatModel, databaseBasedChatMemory);
+        return monuoManus.runStream(message, chatId);
     }
 
     /**
@@ -111,10 +116,10 @@ public class AiController {
      * @param chatId  对话ID
      * @return AI回答
      */
-    @GetMapping("/love_app/chat/rag_fallback")
-    public String doChatWithRagFallback(String message, String chatId) {
-        return loveApp.doChatWithRagFallback(message, chatId);
-    }
+//    @GetMapping("/love_app/chat/rag_fallback")
+//    public String doChatWithRagFallback(String message, String chatId) {
+//        return loveApp.doChatWithRagFallback(message, chatId);
+//    }
 
 
 }

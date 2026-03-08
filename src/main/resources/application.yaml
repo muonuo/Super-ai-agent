@@ -3,19 +3,6 @@ spring:
     name: Super-ai-agent
   profiles:
     active: local
-  #  datasource:
-  #    url: jdbc:postgresql://rm-cn-g4t4n6auf000118o.rwlb.rds.aliyuncs.com:5432/Super_ai_agent
-  #    username: my_root
-  #    password: ${PGVECTOR_PASSWORD}
-  #    ai:
-  #      vectorstore:
-  #        pgvector:
-  #          index-type: HNSW
-  #          dimensions: 1024
-  #          distance-type: COSINE_DISTANCE
-  #          max-document-batch-size: 10000 # Optional: Maximum number of documents per batch
-  #          initialize-schema: true
-
   #  main:
   #    allow-bean-definition-overriding: true
   ai:
@@ -46,6 +33,21 @@ spring:
         stdio:
           servers-configuration: classpath:mcp-servers.json
 
+# PostgreSQL 向量数据库配置
+pgvector:
+  datasource:
+    url: jdbc:postgresql://rm-cn-g4t4n6auf000118o.rwlb.rds.aliyuncs.com:5432/Super_ai_agent
+    username: my_root
+    password: ${PGVECTOR_PASSWORD}
+  ai:
+    vectorstore:
+      pgvector:
+        index-type: HNSW
+        dimensions: 1536
+        distance-type: COSINE_DISTANCE
+        max-document-batch-size: 10000
+        initialize-schema: true
+
 server:
   port: 8123
   servlet:
@@ -73,7 +75,7 @@ search-api:
   tavily-api-key: ${TAVILY_SEARCH_API_KEY}
 # QQ邮箱配置
 qq-email:
-  from: ${QQ_EMAIL_FROM:}
+  from: ${QQ_EMAIL_FROM}
   auth-code: ${QQ_EMAIL_AUTH_CODE}
   smtp-host: ${QQ_EMAIL_SMTP_HOST:smtp.qq.com}
   smtp-port: ${QQ_EMAIL_SMTP_PORT:587}
