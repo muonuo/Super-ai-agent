@@ -33,7 +33,7 @@ public class PgVectorVectorStoreConfig {
         log.info("PgVector 向量存储开始配置");
 
         VectorStore vectorStore = PgVectorStore.builder(jdbcTemplate, dashscopeEmbeddingModel)
-                .dimensions(1536)
+                .dimensions(1024)
                 .distanceType(COSINE_DISTANCE)
                 .indexType(HNSW)
                 .initializeSchema(true)
@@ -42,8 +42,8 @@ public class PgVectorVectorStoreConfig {
                 .maxDocumentBatchSize(10000)
                 .build();
 
-        // 检查是否已有数据，避免重复加载
-        if (hasDocuments(vectorStore)) {
+        // 检查表是否存在且有数据
+        if (hasDocuments(jdbcTemplate)) {
             log.info("向量数据库已有数据，跳过加载");
             return vectorStore;
         }
@@ -63,15 +63,18 @@ public class PgVectorVectorStoreConfig {
     }
 
     /**
-     * 检查向量库是否已有文档
+     * 检查向量库表是否存在且有数据
      */
-    private boolean hasDocuments(VectorStore vectorStore) {
+    private boolean hasDocuments(JdbcTemplate jdbcTemplate) {
         try {
-            List<Document> results = vectorStore.similaritySearch(
-                    SearchRequest.builder().query("test").topK(1).build()
+            Integer count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM public.vector_store", 
+                    Integer.class
             );
-            return !results.isEmpty();
+            return count != null && count > 0;
         } catch (Exception e) {
+            // 表不存在或查询失败，返回 false
+            log.info("向量表不存在或为空: {}", e.getMessage());
             return false;
         }
     }

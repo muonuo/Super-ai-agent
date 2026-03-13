@@ -1,11 +1,8 @@
 package com.monuo.superaiagent.controller;
 
-import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatModel;
 import com.monuo.superaiagent.agent.MonuoManus;
 import com.monuo.superaiagent.app.LoveApp;
-import com.monuo.superaiagent.chatmemory.DatabaseBasedChatMemory;
 import jakarta.annotation.Resource;
-import org.springframework.ai.tool.ToolCallback;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,13 +21,7 @@ public class AiController {
     private LoveApp loveApp;
 
     @Resource
-    private ToolCallback[] manusTools;
-
-    @Resource
-    private DashScopeChatModel dashScopeChatModel;
-
-    @Resource
-    private DatabaseBasedChatMemory databaseBasedChatMemory;
+    private MonuoManus monuoManus;
 
     /**
      * 同步调用 AI 恋爱大师应用
@@ -104,7 +95,6 @@ public class AiController {
      */
     @GetMapping("/manus/chat")
     public SseEmitter doChatWithManus(String message, String chatId) {
-        MonuoManus monuoManus = new MonuoManus(manusTools, dashScopeChatModel, databaseBasedChatMemory);
         return monuoManus.runStream(message, chatId);
     }
 

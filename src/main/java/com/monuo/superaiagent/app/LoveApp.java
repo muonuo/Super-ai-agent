@@ -189,12 +189,11 @@ public class LoveApp {
     }
 
     // AI 恋爱知识库问答功能
-    @Resource
-    @Qualifier("pgVectorVectorStore")
-    private VectorStore loveAppVectorStore;
+//    @Resource
+//    private VectorStore loveAppVectorStore;
 
-    @Resource
-    private Advisor loveAppRagCloudAdvisor;
+//    @Resource
+//    private Advisor loveAppRagCloudAdvisor;
 
     @Resource
     private VectorStore pgVectorVectorStore;
@@ -218,11 +217,11 @@ public class LoveApp {
                 .user(rewrittenMessage)
                 .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
                 //应用RAG知识库问答
-                .advisors(QuestionAnswerAdvisor.builder(loveAppVectorStore).build())
+//                .advisors(QuestionAnswerAdvisor.builder(loveAppVectorStore).build())
                 // 应用RAG检索增强功能（基于云知识库服务）
 //                .advisors(loveAppRagCloudAdvisor)
-                // 应用RAG检索增强功能（基于 PgVector 向量存储）
-//                .advisors(QuestionAnswerAdvisor.builder(pgVectorVectorStore).build())
+//                 应用RAG检索增强功能（基于 PgVector 向量存储）
+                .advisors(QuestionAnswerAdvisor.builder(pgVectorVectorStore).build())
                 //应用自定义的 RAG 检索增强服务（文档查询器 + 上下文增强器）
 //                .advisors(
 //                        LoveAppRagCustomAdvisorFactory.createLoveAppRagCustomAdvisor(

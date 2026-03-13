@@ -5,6 +5,7 @@ import com.monuo.superaiagent.entity.ChatMessage;
 import com.monuo.superaiagent.entity.vo.ConversationVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -28,4 +29,10 @@ public interface ChatMessageMapper extends BaseMapper<ChatMessage> {
             "WHERE t1.is_delete = 0 " +
             "ORDER BY t1.create_time DESC")
     List<ConversationVO> listConversations();
+
+    /**
+     * 逻辑删除会话（设置 is_delete = 1）
+     */
+    @Update("UPDATE chat_message SET is_delete = 1 WHERE conversation_id = #{conversationId}")
+    void updateDeleteByConversationId(String conversationId);
 }

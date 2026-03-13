@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 @Builder
@@ -27,4 +28,14 @@ public class MessageVO {
      * 创建时间
      */
     private Date createTime;
+
+    /**
+     * 思考步骤（仅智能体应用）
+     */
+    private List<String> thinkingSteps;
+
+    /**
+     * 思考用时（秒，仅智能体应用）
+     */
+    private Integer thinkingTime;
 }

@@ -77,37 +77,37 @@ public class ToolCallAgent extends ReActAgent {
             // 输出提示信息
             String result = assistantMessage.getText();
             List<AssistantMessage.ToolCall> toolCallList = assistantMessage.getToolCalls();
-            log.info(getName() + "的思考: " + result);
-            log.info(getName() + "选择了 " + toolCallList.size() + " 个工具来使用");
-            String toolCallInfo = toolCallList.stream()
-                    .map(toolCall -> String.format("工具名称：%s，参数：%s",
-                            toolCall.name(),
-                            toolCall.arguments())
-                    )
-                    .collect(Collectors.joining("\n"));
-            log.info(toolCallInfo);
+            // 只在有工具调用时记录思考内容，避免与 MyLoggerAdvisor 日志重复
+            if (!toolCallList.isEmpty()) {
+                log.info("{}选择了 {} 个工具", getName(), toolCallList.size());
+                String toolCallInfo = toolCallList.stream()
+                        .map(toolCall -> String.format("工具：%s，参数：%s",
+                                toolCall.name(),
+                                toolCall.arguments())
+                )
+                        .collect(Collectors.joining("\n"));
+                log.info(toolCallInfo);
 
-            // 记录工具调用，用于避免重复调用
-            for (AssistantMessage.ToolCall toolCall : toolCallList) {
-                recordAttemptedTool(toolCall.name());
-                // 记录完整工具调用信息（工具名+参数）
-                recordToolCall(toolCall.name(), toolCall.arguments());
+                // 记录工具调用，用于避免重复调用
+                for (AssistantMessage.ToolCall toolCall : toolCallList) {
+                    recordAttemptedTool(toolCall.name());
+                    // 记录完整工具调用信息（工具名+参数）
+                    recordToolCall(toolCall.name(), toolCall.arguments());
+                }
             }
 
             // 记录当前思考用于循环检测
             recordResponse(result);
+            // 始终添加助手消息到消息列表（无论是否调用工具）
+            getMessageList().add(assistantMessage);
             if (toolCallList.isEmpty()) {
-                // 只有不调用工具时，才记录助手消息
-                getMessageList().add(assistantMessage);
-                // 检测是否陷入循环（没有工具调用但响应重复）
-                checkAndHandleStuck();
+                // 没有工具调用，直接返回
                 return false;
             } else {
-                // 需要调用工具时，无需记录助手消息，因为调用工具时会自动记录
                 return true;
             }
         } catch (Exception e) {
-            log.error(getName() + "的思考过程遇到了问题: " + e.getMessage());
+            log.error("{}思考过程遇到问题: {}", getName(), e.getMessage());
             getMessageList().add(
                     new AssistantMessage("处理时遇到错误: " + e.getMessage()));
             return false;
@@ -145,9 +145,6 @@ public class ToolCallAgent extends ReActAgent {
 
         // 记录工具执行结果用于循环检测
         recordResponse(results);
-
-        // 检查是否陷入循环或连续失败
-        checkAndHandleStuck();
 
         return results;
     }

@@ -21,12 +21,46 @@ public class DatabaseBasedChatMemory implements ChatMemory {
 
     @Override
     public void add(String conversationId, List<Message> messages) {
-        List<ChatMessage> chatMessages = messages.stream()
-                .map(message -> MessageConverter.toChatMessage(message, conversationId))
-                .collect(Collectors.toList());
+        if (messages == null || messages.isEmpty()) {
+            log.debug("No messages to save for conversation {}", conversationId);
+            return;
+        }
+
+        // 获取数据库中已有的消息
+        List<ChatMessage> existingMessages = chatMessageRepository.listByConversationId(conversationId);
         
-        chatMessageRepository.saveBatch(chatMessages, chatMessages.size());
-        log.debug("Saved {} messages for conversation {}", messages.size(), conversationId);
+        // 构建已存在消息的指纹集合（用于去重）
+        // 指纹格式：messageType + "|" + content的前100个字符
+        java.util.Set<String> existingFingerprints = existingMessages.stream()
+                .map(msg -> {
+                    String contentPrefix = msg.getContent() != null && msg.getContent().length() > 100 
+                            ? msg.getContent().substring(0, 100) 
+                            : msg.getContent();
+                    return msg.getMessageType() + "|" + contentPrefix;
+                })
+                .collect(Collectors.toSet());
+
+        // 过滤出真正需要保存的新消息
+        List<ChatMessage> newChatMessages = messages.stream()
+                .map(message -> MessageConverter.toChatMessage(message, conversationId))
+                .filter(chatMsg -> {
+                    String contentPrefix = chatMsg.getContent() != null && chatMsg.getContent().length() > 100 
+                            ? chatMsg.getContent().substring(0, 100) 
+                            : chatMsg.getContent();
+                    String fingerprint = chatMsg.getMessageType() + "|" + contentPrefix;
+                    return !existingFingerprints.contains(fingerprint);
+                })
+                .collect(Collectors.toList());
+
+        if (newChatMessages.isEmpty()) {
+            log.debug("No new messages to save for conversation {} (all messages already exist)", conversationId);
+            return;
+        }
+
+        // 批量保存新消息
+        chatMessageRepository.saveBatch(newChatMessages, newChatMessages.size());
+        log.debug("Saved {} new messages for conversation {} (filtered from {} total messages)", 
+                newChatMessages.size(), conversationId, messages.size());
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.monuo.superaiagent.repository;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.monuo.superaiagent.entity.ChatMessage;
 import com.monuo.superaiagent.entity.vo.ConversationVO;
@@ -36,9 +37,8 @@ public class ChatMessageRepository extends ServiceImpl<ChatMessageMapper, ChatMe
     }
 
     public void deleteByConversationId(String conversationId) {
-        LambdaQueryWrapper<ChatMessage> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(ChatMessage::getConversationId, conversationId);
-        this.remove(queryWrapper);
+        // 直接执行SQL更新 is_delete = 1，与 listConversations 中的逻辑保持一致
+        baseMapper.updateDeleteByConversationId(conversationId);
     }
 
     /**
