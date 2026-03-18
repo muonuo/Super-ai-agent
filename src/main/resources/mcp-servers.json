@@ -19,7 +19,9 @@
         "-jar",
         "monuo-image-search-mcp-server/target/monuo-image-search-mcp-server-0.0.1-SNAPSHOT.jar"
       ],
-      "env": {}
+      "env": {
+        "PEXELS_API_KEY": "你的 Pexels API Key"
+      }
     }
   }
 }

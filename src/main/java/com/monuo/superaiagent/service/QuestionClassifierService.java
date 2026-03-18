@@ -58,6 +58,14 @@ public class QuestionClassifierService {
     );
 
     /**
+     * 问候语集合（归类为恋爱相关，因为是恋爱大师的对话开场）
+     */
+    private static final Set<String> GREETING_KEYWORDS = Set.of(
+            "你好", "您好", "hi", "hello", "嗨", "哈喽", "早上好", "晚上好",
+            "在吗", "在不在", "有人吗", "能帮我吗", "可以帮我吗"
+    );
+
+    /**
      * 通用问题关键词集合
      */
     private static final Set<String> GENERAL_KEYWORDS = Set.of(
@@ -92,17 +100,22 @@ public class QuestionClassifierService {
             return QuestionType.SENSITIVE;
         }
 
-        // 2. 检测恋爱关键词
+        // 2. 检测问候语（归类为恋爱相关，因为是恋爱大师的对话开场）
+        if (containsGreetingKeyword(lowerQuestion)) {
+            return QuestionType.LOVE_RELATED;
+        }
+
+        // 3. 检测恋爱关键词
         if (containsLoveKeyword(lowerQuestion)) {
             return QuestionType.LOVE_RELATED;
         }
 
-        // 3. 检测通用问题关键词
+        // 4. 检测通用问题关键词
         if (containsGeneralKeyword(lowerQuestion)) {
             return QuestionType.GENERAL;
         }
 
-        // 4. 默认返回未知，让RAG尝试处理
+        // 5. 默认返回未知，让RAG尝试处理
         return QuestionType.UNKNOWN;
     }
 
@@ -113,6 +126,19 @@ public class QuestionClassifierService {
         for (String keyword : SENSITIVE_KEYWORDS) {
             if (question.contains(keyword)) {
                 log.debug("检测到敏感词: {}", keyword);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 检测是否包含问候语
+     */
+    private boolean containsGreetingKeyword(String question) {
+        for (String keyword : GREETING_KEYWORDS) {
+            if (question.contains(keyword)) {
+                log.debug("检测到问候语: {}", keyword);
                 return true;
             }
         }

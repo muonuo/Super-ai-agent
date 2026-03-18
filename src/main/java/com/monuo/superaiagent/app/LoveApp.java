@@ -122,67 +122,6 @@ public class LoveApp {
                 .content();
     }
 
-    /**
-     * AI RAG对话（支持多轮对话记忆，SSE 流式传输）
-     *
-     * @param message
-     * @param chatId
-     * @return
-     */
-    public Flux<String> doChatByStreamWithRag(String message, String chatId) {
-        // 查询重写
-        String rewrittenMessage = queryRewriter.doQueryRewrite(message);
-        return chatClient
-                .prompt()
-                .user(rewrittenMessage)
-                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
-                .advisors(QuestionAnswerAdvisor.builder(pgVectorVectorStore).build())
-                .stream()
-                .content();
-    }
-
-    /**
-     * AI 智能对话（自动RAG回退 + SSE 流式传输）
-     * 推荐使用：提供最佳用户体验
-     *
-     * @param message
-     * @param chatId
-     * @return
-     */
-    public Flux<String> doChatByStreamSmart(String message, String chatId) {
-        try {
-            // 先判断问题类型
-            QuestionType type = questionClassifierService.classify(message);
-            log.info("问题分类结果: {}, 问题: {}", type, message);
-
-            if (type == QuestionType.SENSITIVE) {
-                return Flux.just("抱歉，我无法回答这个问题。");
-            }
-
-            // 查询重写
-            String rewrittenMessage = queryRewriter.doQueryRewrite(message);
-            
-            // 检查RAG相关性
-            List<Document> docs = pgVectorVectorStore.similaritySearch(
-                SearchRequest.builder().query(rewrittenMessage).topK(3).build()
-            );
-            
-            boolean hasRelevantDocs = docs.stream()
-                .anyMatch(doc -> doc.getScore() >= RAG_SIMILARITY_THRESHOLD);
-            
-            if (hasRelevantDocs) {
-                log.info("RAG检索到{}条相关文档，使用RAG流式回答", docs.size());
-                return doChatByStreamWithRag(message, chatId);
-            } else {
-                log.info("RAG检索无结果（相似度<{}），fallback到通用流式LLM", RAG_SIMILARITY_THRESHOLD);
-                return doChatByStream(message, chatId);
-            }
-        } catch (Exception e) {
-            log.error("智能流式对话异常，fallback到基础流式LLM", e);
-            return doChatByStream(message, chatId);
-        }
-    }
-
     public record LoveReport(String title, List<String> suggestions) {
 
     }
@@ -252,6 +191,25 @@ public class LoveApp {
                 .content();
         log.info("content: {}", content);
         return content;
+    }
+
+    /**
+     * AI RAG对话（支持多轮对话记忆，SSE 流式传输）
+     *
+     * @param message
+     * @param chatId
+     * @return
+     */
+    public Flux<String> doChatByStreamWithRag(String message, String chatId) {
+        // 查询重写
+        String rewrittenMessage = queryRewriter.doQueryRewrite(message);
+        return chatClient
+                .prompt()
+                .user(rewrittenMessage)
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
+                .advisors(QuestionAnswerAdvisor.builder(pgVectorVectorStore).build())
+                .stream()
+                .content();
     }
 
     //AI 调用工具的能力
@@ -380,6 +338,48 @@ public class LoveApp {
         } catch (Exception e) {
             log.error("RAG调用异常，fallback到通用LLM", e);
             return doChat(message, chatId);
+        }
+    }
+
+    /**
+     * AI 智能对话（自动RAG回退 + SSE 流式传输）
+     * 推荐使用：提供最佳用户体验
+     *
+     * @param message
+     * @param chatId
+     * @return
+     */
+    public Flux<String> doChatByStreamSmart(String message, String chatId) {
+        try {
+            // 先判断问题类型
+            QuestionType type = questionClassifierService.classify(message);
+            log.info("问题分类结果: {}, 问题: {}", type, message);
+
+            if (type == QuestionType.SENSITIVE) {
+                return Flux.just("抱歉，我无法回答这个问题。");
+            }
+
+            // 查询重写
+            String rewrittenMessage = queryRewriter.doQueryRewrite(message);
+
+            // 检查RAG相关性
+            List<Document> docs = pgVectorVectorStore.similaritySearch(
+                    SearchRequest.builder().query(rewrittenMessage).topK(3).build()
+            );
+
+            boolean hasRelevantDocs = docs.stream()
+                    .anyMatch(doc -> doc.getScore() >= RAG_SIMILARITY_THRESHOLD);
+
+            if (hasRelevantDocs) {
+                log.info("RAG检索到{}条相关文档，使用RAG流式回答", docs.size());
+                return doChatByStreamWithRag(message, chatId);
+            } else {
+                log.info("RAG检索无结果（相似度<{}），fallback到通用流式LLM", RAG_SIMILARITY_THRESHOLD);
+                return doChatByStream(message, chatId);
+            }
+        } catch (Exception e) {
+            log.error("智能流式对话异常，fallback到基础流式LLM", e);
+            return doChatByStream(message, chatId);
         }
     }
 
