@@ -37,7 +37,10 @@
       "mcp__ide__getDiagnostics",
       "mcp__github__search_repositories",
       "mcp__github__get_file_contents",
-      "mcp__tavily__tavily_extract"
+      "mcp__tavily__tavily_extract",
+      "Bash(grep '\\\\.md$')",
+      "Bash(ls -la *.md)",
+      "Bash(git status:*)"
     ]
   }
 }
