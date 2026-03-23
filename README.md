@@ -432,7 +432,7 @@ public class ToolRegistration {
 
 ### 添加新的 RAG 文档
 
-将 Markdown 文档放入 `src/main/resources/rag/love_knowledge/` 目录，系统会自动加载。
+将 Markdown 文档放入 `src/main/resources/`目录，系统会自动加载。
 
 ---
 
