@@ -359,6 +359,7 @@
               v-model="inputMessage"
               placeholder="输入您的问题..."
               @keydown.enter.exact.prevent="sendMessage"
+              @input="autoResize"
               rows="1"
             ></textarea>
             <button
@@ -395,6 +396,7 @@
               v-model="inputMessage"
               placeholder="输入您的问题..."
               @keydown.enter.exact.prevent="sendMessage"
+              @input="autoResize"
               rows="1"
             ></textarea>
             <button
@@ -721,6 +723,16 @@ const focusInput = () => {
         inputRef.value.value.length,
         inputRef.value.value.length,
       );
+    }
+  });
+};
+
+// 自动调整输入框高度
+const autoResize = () => {
+  nextTick(() => {
+    if (inputRef.value) {
+      inputRef.value.style.height = 'auto';
+      inputRef.value.style.height = Math.min(inputRef.value.scrollHeight, 150) + 'px';
     }
   });
 };
@@ -1753,10 +1765,11 @@ const handleKeydown = (e) => {
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   resize: none;
-  max-height: 120px;
   line-height: 1.5;
   caret-color: #8b5cf6; /* 明显的紫色光标 */
   cursor: text; /* 确保显示文本光标 */
+  overflow-y: auto;
+  min-height: 20px;
 }
 
 .empty-input-wrapper textarea:focus {
@@ -2343,12 +2356,13 @@ const handleKeydown = (e) => {
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 15px;
   resize: none;
-  max-height: 100px;
   line-height: 1.6;
   background: transparent;
   color: #ffffff;
   caret-color: #8b5cf6; /* 明显的紫色光标 */
   cursor: text; /* 确保显示文本光标 */
+  overflow-y: auto;
+  min-height: 20px;
 }
 
 .input-wrapper textarea:focus {

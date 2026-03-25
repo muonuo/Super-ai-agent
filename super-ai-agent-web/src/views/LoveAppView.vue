@@ -374,6 +374,7 @@
                   v-model="inputMessage"
                   placeholder="给恋爱大师发消息"
                   @keydown.enter.exact.prevent="sendMessage"
+                  @input="autoResize"
                   rows="1"
                   class="modern-input"
                   :disabled="isLoading"
@@ -714,6 +715,16 @@ const focusInput = () => {
   nextTick(() => {
     if (inputRef.value) {
       inputRef.value.focus();
+    }
+  });
+};
+
+// 自动调整输入框高度
+const autoResize = () => {
+  nextTick(() => {
+    if (inputRef.value) {
+      inputRef.value.style.height = 'auto';
+      inputRef.value.style.height = Math.min(inputRef.value.scrollHeight, 200) + 'px';
     }
   });
 };
@@ -2092,17 +2103,18 @@ const copyReport = (reportData) => {
   gap: 12px;
 }
 
-.modern-input {
+.love-app-root .modern-input {
   flex: 1;
   border: none;
   outline: none;
   font-size: 15px;
   resize: none;
-  max-height: 120px;
   line-height: 1.6;
   background: transparent;
   color: #111827;
   font-family: inherit;
+  overflow-y: auto;
+  min-height: 24px;
 }
 
 .modern-input::placeholder {
