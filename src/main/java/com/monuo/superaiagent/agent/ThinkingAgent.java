@@ -5,6 +5,7 @@ import com.monuo.superaiagent.agent.thinking.ThinkingChain;
 import com.monuo.superaiagent.agent.thinking.ThinkingChainParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
@@ -83,7 +84,7 @@ public class ThinkingAgent extends ToolCallAgent {
     private boolean simpleThink(String userInput) {
         try {
             // 使用简化的提示词
-            List<org.springframework.ai.chat.messages.Message> messages = new ArrayList<>(getMessageList());
+            List<Message> messages = new ArrayList<>(getMessageList());
             Prompt prompt = new Prompt(messages, getChatOptions());
 
             ChatResponse response = getChatClient().prompt(prompt)
@@ -120,7 +121,7 @@ public class ThinkingAgent extends ToolCallAgent {
             }
 
             // 使用完整的思考链提示词
-            List<org.springframework.ai.chat.messages.Message> messages = new ArrayList<>(getMessageList());
+            List<Message> messages = new ArrayList<>(getMessageList());
             Prompt prompt = new Prompt(messages, getChatOptions());
 
             ChatResponse response = getChatClient().prompt(prompt)
