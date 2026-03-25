@@ -1,0 +1,48 @@
+# Maven 构建产物（本地和 target 目录都不需要）
+target/
+!**/src/main/**/target/
+
+# IDE 配置
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# Git 相关
+.git/
+.gitignore
+
+# 文档（排除 docs 目录，但保留 README.md）
+docs/
+*.md
+!README.md
+
+# 日志
+*.log
+logs/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 本地配置文件（包含敏感信息）
+.env
+*.local
+application-local.yaml
+
+# MCP 子模块的 target
+monuo-image-search-mcp-server/target/
+
+# 测试
+tests/
+**/test/
+
+# 临时文件
+tmp/
+*.tmp
+
+# 部署文件（不需要打包）
+docker-compose.local.yml
+README-部署指南.md

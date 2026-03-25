@@ -1,0 +1,249 @@
+/* Gemini 风格思考过程盒子 - 默认收起，简洁设计 */
+.gemini-thinking-box {
+  margin-bottom: 16px;
+  border-radius: 8px;
+  overflow: hidden;
+  border-left: 3px solid #5f6368;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+/* 思考头部 - 可点击展开/收起 */
+.gemini-thinking-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  user-select: none;
+}
+
+.gemini-thinking-header:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.thinking-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+/* 思考图标 */
+.thinking-icon {
+  color: #5f6368;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.thinking-icon.spinning {
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 思考文本 */
+.thinking-text {
+  font-size: 13px;
+  color: #5f6368;
+  font-weight: 500;
+}
+
+/* 三个点动画（内联显示） */
+.thinking-dots-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 4px;
+}
+
+.thinking-dots-inline .dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: #5f6368;
+  animation: dotPulse 1.4s infinite;
+}
+
+.thinking-dots-inline .dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.thinking-dots-inline .dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.thinking-dots-inline .dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes dotPulse {
+  0%,
+  60%,
+  100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+/* 思考时间 */
+.thinking-time {
+  font-size: 12px;
+  color: #80868b;
+  margin-left: 4px;
+}
+
+/* 展开/收起箭头 */
+.thinking-chevron {
+  color: #5f6368;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.thinking-chevron.expanded {
+  transform: rotate(180deg);
+}
+
+/* 思考内容区域（默认隐藏） */
+.gemini-thinking-content {
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border-top: 1px solid #e8eaed;
+  max-height: 400px;
+  overflow-y: auto;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 400px;
+  }
+}
+
+/* 自定义滚动条 */
+.gemini-thinking-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.gemini-thinking-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gemini-thinking-content::-webkit-scrollbar-thumb {
+  background: #dadce0;
+  border-radius: 3px;
+}
+
+.gemini-thinking-content::-webkit-scrollbar-thumb:hover {
+  background: #bdc1c6;
+}
+
+/* 思考步骤 */
+.thinking-step {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #5f6368;
+  margin-bottom: 8px;
+  padding: 8px 0;
+  word-break: break-word;
+  animation: fadeIn 0.3s ease;
+  font-family: "Consolas", "Monaco", "Courier New", monospace;
+  font-style: italic;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.thinking-step:last-child {
+  margin-bottom: 0;
+}
+
+/* 正在思考的加载提示 */
+.thinking-loading {
+  color: #80868b;
+  font-style: italic;
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+  .gemini-thinking-header {
+    padding: 6px 10px;
+  }
+
+  .thinking-text {
+    font-size: 12px;
+  }
+
+  .gemini-thinking-content {
+    padding: 10px 12px;
+  }
+
+  .thinking-step {
+    font-size: 12px;
+  }
+}
+
+/* 暗色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .gemini-thinking-header:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .thinking-icon,
+  .thinking-text,
+  .thinking-chevron {
+    color: #9aa0a6;
+  }
+
+  .thinking-dots-inline .dot {
+    background-color: #9aa0a6;
+  }
+
+  .thinking-time {
+    color: #80868b;
+  }
+
+  .gemini-thinking-content {
+    background: #202124;
+    border-top-color: #3c4043;
+  }
+
+  .thinking-step {
+    color: #e8eaed;
+  }
+
+  .thinking-loading {
+    color: #9aa0a6;
+  }
+
+  .gemini-thinking-content::-webkit-scrollbar-thumb {
+    background: #5f6368;
+  }
+
+  .gemini-thinking-content::-webkit-scrollbar-thumb:hover {
+    background: #80868b;
+  }
+}

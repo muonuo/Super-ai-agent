@@ -1,0 +1,80 @@
+# 本地测试用 docker-compose 配置
+# 用于在本地模拟云托管环境（包含 MySQL 和 PostgreSQL）
+version: '3.8'
+
+services:
+  # 主应用
+  app:
+    build: .
+    ports:
+      - "8123:8123"
+    environment:
+      # MySQL 配置
+      MYSQL_URL: jdbc:mysql://mysql:3306/super_ai_agent?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      MYSQL_USERNAME: root
+      MYSQL_PASSWORD: root123
+      # PostgreSQL 配置
+      POSTGRESQL_URL: jdbc:postgresql://postgres:5432/super_ai_agent
+      POSTGRESQL_USERNAME: postgres
+      POSTGRESQL_PASSWORD: postgres123
+      # AI API Key
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY}
+      # 其他配置
+      SEARCH_API_KEY: ${SEARCH_API_KEY}
+      TAVILY_SEARCH_API_KEY: ${TAVILY_SEARCH_API_KEY}
+      SPRING_PROFILES_ACTIVE: cloud
+    depends_on:
+      mysql:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - super-ai-network
+
+  # MySQL 数据库
+  mysql:
+    image: mysql:8.0-slim
+    container_name: super-ai-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: super_ai_agent
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - super-ai-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # PostgreSQL 向量数据库
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: super-ai-postgres
+    environment:
+      POSTGRES_PASSWORD: postgres123
+      POSTGRES_DB: super_ai_agent
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - super-ai-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+networks:
+  super-ai-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  postgres_data:
