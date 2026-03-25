@@ -1,7 +1,18 @@
 {
   "name": "super-ai-agent-web",
   "version": "1.0.0",
+  "description": "Frontend for Super AI Agent - Intelligent Conversational Assistant Platform",
   "type": "module",
+  "author": "Monuo <https://github.com/muonuo>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/muonuo/Super-ai-agent.git"
+  },
+  "bugs": {
+    "url": "https://github.com/muonuo/Super-ai-agent/issues"
+  },
+  "homepage": "https://github.com/muonuo/Super-ai-agent#readme",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

@@ -7,11 +7,16 @@ const BASE_URL =
  * AI恋爱大师 - 基础流式对话
  * @param {string} message - 用户消息
  * @param {string} chatId - 会话ID
+ * @param {boolean} enableTools - 是否启用工具调用
  * @returns {Promise<ReadableStream>}
  */
-export async function doChatWithLoveAppSse(message, chatId) {
+export async function doChatWithLoveAppSse(
+  message,
+  chatId,
+  enableTools = false,
+) {
   const response = await fetch(
-    `${BASE_URL}/ai/love_app/chat/sse?message=${encodeURIComponent(message)}&chatId=${encodeURIComponent(chatId)}`,
+    `${BASE_URL}/ai/love_app/chat/sse?message=${encodeURIComponent(message)}&chatId=${encodeURIComponent(chatId)}&enableTools=${enableTools}`,
   );
   return response.body;
 }
@@ -20,11 +25,16 @@ export async function doChatWithLoveAppSse(message, chatId) {
  * AI恋爱大师 - RAG流式对话
  * @param {string} message - 用户消息
  * @param {string} chatId - 会话ID
+ * @param {boolean} enableTools - 是否启用工具调用
  * @returns {Promise<ReadableStream>}
  */
-export async function doChatWithLoveAppRag(message, chatId) {
+export async function doChatWithLoveAppRag(
+  message,
+  chatId,
+  enableTools = false,
+) {
   const response = await fetch(
-    `${BASE_URL}/ai/love_app/rag?message=${encodeURIComponent(message)}&chatId=${encodeURIComponent(chatId)}`,
+    `${BASE_URL}/ai/love_app/rag?message=${encodeURIComponent(message)}&chatId=${encodeURIComponent(chatId)}&enableTools=${enableTools}`,
   );
   return response.body;
 }
@@ -34,11 +44,16 @@ export async function doChatWithLoveAppRag(message, chatId) {
  * 自动RAG回退 + SSE流式传输，提供最佳用户体验
  * @param {string} message - 用户消息
  * @param {string} chatId - 会话ID
+ * @param {boolean} enableTools - 是否启用工具调用
  * @returns {Promise<ReadableStream>}
  */
-export async function doChatWithLoveAppSmart(message, chatId) {
+export async function doChatWithLoveAppSmart(
+  message,
+  chatId,
+  enableTools = false,
+) {
   const response = await fetch(
-    `${BASE_URL}/ai/love_app/smart?message=${encodeURIComponent(message)}&chatId=${encodeURIComponent(chatId)}`,
+    `${BASE_URL}/ai/love_app/smart?message=${encodeURIComponent(message)}&chatId=${encodeURIComponent(chatId)}&enableTools=${enableTools}`,
   );
   return response.body;
 }

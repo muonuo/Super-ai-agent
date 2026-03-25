@@ -32,7 +32,24 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
+/**
+ * AI 恋爱大师应用（原始实现）
+ * 
+ * ⚠️ 注意：此类保留用于向后兼容和学习参考
+ * 
+ * 📌 推荐使用：com.monuo.superaiagent.service.LoveAppService
+ * 
+ * LoveAppService 提供了更好的：
+ * - ✅ 统一的异常处理
+ * - ✅ 完善的参数校验
+ * - ✅ 清晰的业务逻辑分层
+ * - ✅ 更好的日志记录
+ * 
+ * 如果你是新项目或新功能，请使用 LoveAppService 而不是这个类。
+ * 
+ * @see com.monuo.superaiagent.service.LoveAppService
+ * @deprecated 推荐使用 {@link com.monuo.superaiagent.service.LoveAppService}
+ */
 @Component
 @Slf4j
 public class LoveApp {
@@ -87,22 +104,25 @@ public class LoveApp {
                 .build();
     }
 
-
     /**
      * AI 基础对话 （支持多轮对话）
      *
      * @param message
      * @param chatId
+     * @param enableTools 是否启用工具调用
      * @return
      */
-    public String doChat(String message, String chatId) {
-        String content = chatClient
+    public String doChat(String message, String chatId, boolean enableTools) {
+        var promptSpec = chatClient
                 .prompt()
                 .user(message)
-                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
-                .call()
-                .content();
-        return content;
+                .advisors(advisor -> advisor.param(ChatMemory.CONVERSATION_ID, chatId));
+
+        if (enableTools) {
+            promptSpec = promptSpec.toolCallbacks(loveAppTools);
+        }
+
+        return promptSpec.call().content();
     }
 
     /**
@@ -110,15 +130,20 @@ public class LoveApp {
      *
      * @param message
      * @param chatId
+     * @param enableTools 是否启用工具调用
      * @return
      */
-    public Flux<String> doChatByStream(String message, String chatId) {
-        return chatClient
+    public Flux<String> doChatByStream(String message, String chatId, boolean enableTools) {
+        var promptSpec = chatClient
                 .prompt()
                 .user(message)
-                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
-                .stream()
-                .content();
+                .advisors(advisor -> advisor.param(ChatMemory.CONVERSATION_ID, chatId));
+
+        if (enableTools) {
+            promptSpec = promptSpec.toolCallbacks(loveAppTools);
+        }
+
+        return promptSpec.stream().content();
     }
 
     public record LoveReport(String title, List<String> suggestions) {
@@ -163,31 +188,25 @@ public class LoveApp {
      *
      * @param message
      * @param chatId
+     * @param enableTools 是否启用工具调用
      * @return
      */
-    public String doChatWithRag(String message, String chatId) {
+    public String doChatWithRag(String message, String chatId, boolean enableTools) {
         // 查询重写
         String rewrittenMessage = queryRewriter.doQueryRewrite(message);
-        String content = chatClient
+        
+        var promptSpec = chatClient
                 .prompt()
-                // 使用改写后的查询
                 .user(rewrittenMessage)
-                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
-                //应用RAG知识库问答
-//                .advisors(QuestionAnswerAdvisor.builder(loveAppVectorStore).build())
-                // 应用RAG检索增强功能（基于云知识库服务）
-//                .advisors(loveAppRagCloudAdvisor)
-//                 应用RAG检索增强功能（基于 PgVector 向量存储）
-                .advisors(QuestionAnswerAdvisor.builder(pgVectorVectorStore).build())
-                //应用自定义的 RAG 检索增强服务（文档查询器 + 上下文增强器）
-//                .advisors(
-//                        LoveAppRagCustomAdvisorFactory.createLoveAppRagCustomAdvisor(
-//                                loveAppVectorStore, "已婚"
-//                        )
-//                )
-                .call()
-                .content();
-        return content;
+                .advisors(advisor -> advisor.param(ChatMemory.CONVERSATION_ID, chatId));
+
+        if (enableTools) {
+            promptSpec = promptSpec.toolCallbacks(loveAppTools);
+        }
+
+        promptSpec = promptSpec.advisors(QuestionAnswerAdvisor.builder(pgVectorVectorStore).build());
+
+        return promptSpec.call().content();
     }
 
     /**
@@ -195,18 +214,25 @@ public class LoveApp {
      *
      * @param message
      * @param chatId
+     * @param enableTools 是否启用工具调用
      * @return
      */
-    public Flux<String> doChatByStreamWithRag(String message, String chatId) {
+    public Flux<String> doChatByStreamWithRag(String message, String chatId, boolean enableTools) {
         // 查询重写
         String rewrittenMessage = queryRewriter.doQueryRewrite(message);
-        return chatClient
+        
+        var promptSpec = chatClient
                 .prompt()
                 .user(rewrittenMessage)
-                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
-                .advisors(QuestionAnswerAdvisor.builder(pgVectorVectorStore).build())
-                .stream()
-                .content();
+                .advisors(advisor -> advisor.param(ChatMemory.CONVERSATION_ID, chatId));
+
+        if (enableTools) {
+            promptSpec = promptSpec.toolCallbacks(loveAppTools);
+        }
+
+        promptSpec = promptSpec.advisors(QuestionAnswerAdvisor.builder(pgVectorVectorStore).build());
+
+        return promptSpec.stream().content();
     }
 
     //AI 调用工具的能力
@@ -280,9 +306,10 @@ public class LoveApp {
      *
      * @param message 用户消息
      * @param chatId  对话ID
+     * @param enableTools 是否启用工具调用
      * @return AI回答
      */
-    public String doChatWithRagFallback(String message, String chatId) {
+    public String doChatWithRagFallback(String message, String chatId, boolean enableTools) {
         // 1. 先判断问题类型
         QuestionType type = questionClassifierService.classify(message);
         log.info("问题分类结果: {}, 问题: {}", type, message);
@@ -296,7 +323,7 @@ public class LoveApp {
             case UNKNOWN:
             default:
                 // 恋爱相关/通用/未知问题，都尝试RAG，失败则fallback到通用回答
-                return doChatWithRagOrFallback(message, chatId);
+                return doChatWithRagOrFallback(message, chatId, enableTools);
         }
     }
 
@@ -305,9 +332,10 @@ public class LoveApp {
      *
      * @param message 用户消息
      * @param chatId  对话ID
+     * @param enableTools 是否启用工具调用
      * @return AI回答
      */
-    private String doChatWithRagOrFallback(String message, String chatId) {
+    private String doChatWithRagOrFallback(String message, String chatId, boolean enableTools) {
         try {
             // 先尝试RAG
             String rewrittenMessage = queryRewriter.doQueryRewrite(message);
@@ -324,16 +352,16 @@ public class LoveApp {
             if (!hasRelevantDocs) {
                 // RAG无结果，fallback到通用LLM
                 log.info("RAG检索无结果（相似度<{}），fallback到通用LLM", RAG_SIMILARITY_THRESHOLD);
-                return doChat(message, chatId);
+                return doChat(message, chatId, enableTools);
             }
 
             // 有结果，使用RAG回答
             log.info("RAG检索到{}条相关文档，使用RAG回答", docs.size());
-            return doChatWithRag(message, chatId);
+            return doChatWithRag(message, chatId, enableTools);
 
         } catch (Exception e) {
             log.error("RAG调用异常，fallback到通用LLM", e);
-            return doChat(message, chatId);
+            return doChat(message, chatId, enableTools);
         }
     }
 
@@ -343,9 +371,10 @@ public class LoveApp {
      *
      * @param message
      * @param chatId
+     * @param enableTools 是否启用工具调用
      * @return
      */
-    public Flux<String> doChatByStreamSmart(String message, String chatId) {
+    public Flux<String> doChatByStreamSmart(String message, String chatId, boolean enableTools) {
         try {
             // 先判断问题类型
             QuestionType type = questionClassifierService.classify(message);
@@ -368,14 +397,14 @@ public class LoveApp {
 
             if (hasRelevantDocs) {
                 log.info("RAG检索到{}条相关文档，使用RAG流式回答", docs.size());
-                return doChatByStreamWithRag(message, chatId);
+                return doChatByStreamWithRag(message, chatId, enableTools);
             } else {
                 log.info("RAG检索无结果（相似度<{}），fallback到通用流式LLM", RAG_SIMILARITY_THRESHOLD);
-                return doChatByStream(message, chatId);
+                return doChatByStream(message, chatId, enableTools);
             }
         } catch (Exception e) {
             log.error("智能流式对话异常，fallback到基础流式LLM", e);
-            return doChatByStream(message, chatId);
+            return doChatByStream(message, chatId, enableTools);
         }
     }
 

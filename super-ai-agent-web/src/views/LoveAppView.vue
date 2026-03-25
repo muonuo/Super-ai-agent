@@ -188,7 +188,11 @@
         <!-- 聊天内容区域 -->
         <div class="chat-content">
           <!-- 聊天记录区域 -->
-          <div class="chat-messages" ref="messagesContainer" @scroll="handleUserScroll">
+          <div
+            class="chat-messages"
+            ref="messagesContainer"
+            @scroll="handleUserScroll"
+          >
             <div v-if="messages.length === 0" class="empty-state">
               <div class="empty-icon">
                 <svg
@@ -723,8 +727,9 @@ const focusInput = () => {
 const autoResize = () => {
   nextTick(() => {
     if (inputRef.value) {
-      inputRef.value.style.height = 'auto';
-      inputRef.value.style.height = Math.min(inputRef.value.scrollHeight, 200) + 'px';
+      inputRef.value.style.height = "auto";
+      inputRef.value.style.height =
+        Math.min(inputRef.value.scrollHeight, 200) + "px";
     }
   });
 };
@@ -768,65 +773,75 @@ const loadSessions = async () => {
     });
 
     // 为每个会话获取标题
-    const sessionsList = await Promise.all(Object.values(groupedData).map(async (conversation) => {
-      let title = conversation.lastMessage || "新会话";
-      let lastMessageTime = conversation.updatedAt || 0;
+    const sessionsList = await Promise.all(
+      Object.values(groupedData).map(async (conversation) => {
+        let title = conversation.lastMessage || "新会话";
+        let lastMessageTime = conversation.updatedAt || 0;
 
-      // 如果最后一条消息是 JSON 格式的报告，需要获取倒数第二条消息
-      if (title.trim().startsWith('{')) {
-        try {
-          const parsed = JSON.parse(title);
-          // 如果是报告格式（包含 title 和 suggestions），需要获取更早的消息
-          if (parsed.title && parsed.suggestions) {
-            // 获取完整的对话历史，找到最后一条非报告消息
-            const history = await getConversationHistory(conversation.conversationId);
-            // 从后往前找，找到第一条非 JSON 报告的消息
-            for (let i = history.length - 1; i >= 0; i--) {
-              const msg = history[i];
-              if (msg.role === 'assistant' && msg.content && msg.content.trim().startsWith('{')) {
-                // 是 JSON 报告，跳过
-                try {
-                  const msgParsed = JSON.parse(msg.content);
-                  if (msgParsed.title && msgParsed.suggestions) {
-                    continue;
+        // 如果最后一条消息是 JSON 格式的报告，需要获取倒数第二条消息
+        if (title.trim().startsWith("{")) {
+          try {
+            const parsed = JSON.parse(title);
+            // 如果是报告格式（包含 title 和 suggestions），需要获取更早的消息
+            if (parsed.title && parsed.suggestions) {
+              // 获取完整的对话历史，找到最后一条非报告消息
+              const history = await getConversationHistory(
+                conversation.conversationId,
+              );
+              // 从后往前找，找到第一条非 JSON 报告的消息
+              for (let i = history.length - 1; i >= 0; i--) {
+                const msg = history[i];
+                if (
+                  msg.role === "assistant" &&
+                  msg.content &&
+                  msg.content.trim().startsWith("{")
+                ) {
+                  // 是 JSON 报告，跳过
+                  try {
+                    const msgParsed = JSON.parse(msg.content);
+                    if (msgParsed.title && msgParsed.suggestions) {
+                      continue;
+                    }
+                  } catch (e) {
+                    // 不是有效的 JSON 报告，使用这条消息
+                    title = msg.content.substring(0, 30);
+                    lastMessageTime = msg.timestamp || lastMessageTime;
+                    break;
                   }
-                } catch (e) {
-                  // 不是有效的 JSON 报告，使用这条消息
+                } else if (msg.role === "user") {
+                  // 是用户消息，使用这条
+                  title = msg.content.substring(0, 30);
+                  lastMessageTime = msg.timestamp || lastMessageTime;
+                  break;
+                } else if (msg.content && !msg.content.trim().startsWith("{")) {
+                  // 是普通 AI 回复
                   title = msg.content.substring(0, 30);
                   lastMessageTime = msg.timestamp || lastMessageTime;
                   break;
                 }
-              } else if (msg.role === 'user') {
-                // 是用户消息，使用这条
-                title = msg.content.substring(0, 30);
-                lastMessageTime = msg.timestamp || lastMessageTime;
-                break;
-              } else if (msg.content && !msg.content.trim().startsWith('{')) {
-                // 是普通 AI 回复
-                title = msg.content.substring(0, 30);
-                lastMessageTime = msg.timestamp || lastMessageTime;
-                break;
+              }
+              // 如果所有消息都是报告，显示为"新会话"
+              if (title.trim().startsWith("{")) {
+                title = "新会话";
               }
             }
-            // 如果所有消息都是报告，显示为"新会话"
-            if (title.trim().startsWith('{')) {
-              title = "新会话";
-            }
+          } catch (e) {
+            // 不是有效的 JSON，保留原文
           }
-        } catch (e) {
-          // 不是有效的 JSON，保留原文
         }
-      }
 
-      return {
-        id: conversation.conversationId,
-        title: title,
-        lastMessageTime: lastMessageTime,
-      };
-    }));
+        return {
+          id: conversation.conversationId,
+          title: title,
+          lastMessageTime: lastMessageTime,
+        };
+      }),
+    );
 
     // 按最后消息时间排序
-    sessions.value = sessionsList.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
+    sessions.value = sessionsList.sort(
+      (a, b) => b.lastMessageTime - a.lastMessageTime,
+    );
   } catch (error) {
     console.error("加载会话列表失败:", error);
     sessions.value = [];
@@ -843,7 +858,10 @@ const loadSessionHistory = async (sessionId) => {
         try {
           // 检查是否是 JSON 格式的报告（排除已经格式化过的内容）
           // 如果内容已经包含📊 emoji，说明已经是格式化过的报告，不再重复解析
-          if (msg.content.trim().startsWith('{') && !msg.content.includes('📊')) {
+          if (
+            msg.content.trim().startsWith("{") &&
+            !msg.content.includes("📊")
+          ) {
             const parsed = JSON.parse(msg.content);
             if (parsed.title && parsed.suggestions) {
               // 格式化报告内容
@@ -1149,7 +1167,8 @@ const sendBasicMessage = async (message) => {
   displayedContent.value[aiIndex] = "";
   isTyping.value[aiIndex] = true;
 
-  const stream = await doChatWithLoveAppSse(message, chatId.value);
+  const enableTools = selectedEnhancements.value.includes("tools");
+  const stream = await doChatWithLoveAppSse(message, chatId.value, enableTools);
   await processStreamResponse(stream, aiIndex);
 };
 
@@ -1160,7 +1179,12 @@ const sendSmartMessage = async (message) => {
   displayedContent.value[aiIndex] = "";
   isTyping.value[aiIndex] = true;
 
-  const stream = await doChatWithLoveAppSmart(message, chatId.value);
+  const enableTools = selectedEnhancements.value.includes("tools");
+  const stream = await doChatWithLoveAppSmart(
+    message,
+    chatId.value,
+    enableTools,
+  );
   await processStreamResponse(stream, aiIndex);
 };
 
@@ -1173,7 +1197,12 @@ const sendRagMessage = async (message) => {
   isTyping.value[aiIndex] = true;
 
   try {
-    const stream = await doChatWithLoveAppRag(message, chatId.value);
+    const enableTools = selectedEnhancements.value.includes("tools");
+    const stream = await doChatWithLoveAppRag(
+      message,
+      chatId.value,
+      enableTools,
+    );
     await processStreamResponse(stream, aiIndex);
   } catch (error) {
     console.error("RAG查询失败:", error);
@@ -1334,13 +1363,13 @@ const formatMessage = (content) => {
 
   // 识别数字列表格式（如 "1. xxx" "2. xxx" "3. xxx"）
   // 在每个数字列表项前添加空行
-  formatted = formatted.replace(/(\d+\.\s+)/g, '<br><br>$1');
+  formatted = formatted.replace(/(\d+\.\s+)/g, "<br><br>$1");
 
   // 清理开头多余的 <br>
-  formatted = formatted.replace(/^(<br>)+/, '');
+  formatted = formatted.replace(/^(<br>)+/, "");
 
   // 清理连续超过2个的 <br>
-  formatted = formatted.replace(/(<br>){3,}/g, '<br><br>');
+  formatted = formatted.replace(/(<br>){3,}/g, "<br><br>");
 
   return formatted;
 };

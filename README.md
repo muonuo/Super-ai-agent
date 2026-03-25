@@ -2,42 +2,126 @@
 
 <div align="center">
 
+中文 | [English](README_EN.md)
+
 ![Java](https://img.shields.io/badge/Java-21-orange)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.9-brightgreen)
 ![Spring AI](https://img.shields.io/badge/Spring%20AI-1.0.0-blue)
 ![Vue](https://img.shields.io/badge/Vue-3.4.0-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
+![GitHub stars](https://img.shields.io/github/stars/muonuo/Super-ai-agent?style=social)
+![GitHub forks](https://img.shields.io/github/forks/muonuo/Super-ai-agent?style=social)
 
 基于 Spring Boot 3.5 + Java 21 + Spring AI + Vue 3，实现 AI 情感咨询、深度思考智能体、RAG 知识库检索、多工具调用等核心功能。支持恋爱报告生成、地图服务集成、PDF 文档处理等实用场景。架构清晰、文档完善，非常适合作为 AI 应用学习和简历项目，学习门槛低。
 
-[功能特性](#功能特性) • [技术架构](#技术架构) • [快速开始](#快速开始) • [部署指南](#部署指南)
+[功能特性](#功能特性) • [技术架构](#技术架构) • [快速开始](#快速开始) • [演示效果](#演示效果)
 
 </div>
 
 ---
 
+## 📸 演示效果
+
+### 首页
+
+<p align="center">
+  <img src="docs/images/首页.jpg" alt="首页" width="800"/>
+  <br/>
+  <em>首页 - 选择你的AI助手</em>
+</p>
+
+**功能展示：**
+
+- ✅ 简洁现代的界面设计
+- ✅ 两大AI应用可供选择
+- ✅ 快速访问恋爱大师和超级智能体
+- ✅ 响应式布局，适配所有设备
+
+### AI 恋爱大师
+
+<p align="center">
+  <img src="docs/images/恋爱大师.jpg" alt="AI 恋爱大师演示" width="800"/>
+  <br/>
+  <em>AI 恋爱大师 - 情感咨询与纯文本对话</em>
+</p>
+
+**功能展示：**
+
+- ✅ 自然的纯文本对话，无Markdown格式干扰
+- ✅ 三种对话模式：基础对话、智能模式（推荐）、RAG问答
+- ✅ 功能增强选项：恋爱报告生成、工具调用
+- ✅ 会话管理：新建对话、重命名、删除
+- ✅ 实时流式输出，打字机效果
+
+### AI 超级智能体（Manus）
+
+<p align="center">
+  <img src="docs/images/智能体.jpg" alt="Manus 超级智能体演示" width="800"/>
+  <br/>
+  <em>Manus 超级智能体 - 深度思考与工具调用</em>
+</p>
+
+**功能展示：**
+
+- ✅ Gemini风格的思考过程展示（可折叠）
+- ✅ 实时显示思考步骤和思考时间
+- ✅ 14+ 工具自动调用（搜索、文件、邮件、PDF等）
+- ✅ MCP协议集成（高德地图15个工具）
+- ✅ 智能问题分类（简单问题直接回答，复杂问题深度思考）
+
+---
+
 ## 📖 项目简介
 
-Super AI Agent 是一个功能完整的 AI 智能对话平台，包含两个核心应用：
+Super AI Agent 是一个**生产级的 AI 智能对话平台**，展示了如何使用 Spring AI 构建完整的智能体应用。
 
-1. **AI 恋爱大师**：专业的情感咨询助手，提供恋爱建议、关系分析和情感报告
-2. **AI 超级智能体（Manus）**：具备深度思考能力的全能 AI 助手，支持工具调用和多模态交互
+### 🎭 两大核心应用
 
-### 🎯 项目亮点
+<table>
+<tr>
+<td width="50%">
 
-- ✅ **深度思考模式**：参考 DeepSeek，实现简单/复杂问题智能分类和选择性思考
-- ✅ **完整的 ReAct 架构**：Think（思考）→ Act（行动）→ Observe（观察）循环
-- ✅ **RAG 知识增强**：向量存储、查询转换、多查询扩展、智能降级策略
-- ✅ **丰富的工具生态**：14+ 自定义工具 + MCP 协议集成（高德地图 15 个工具）
-- ✅ **Gemini 风格 UI**：优雅的思考过程展示、流式输出、智能滚动
-- ✅ **防死循环检测**：4 种检测方式 + 3 级干预机制
-- ✅ **数据库持久化**：MySQL 对话历史 + PostgreSQL PGVector 向量存储
+#### 💕 AI 恋爱大师
+
+专业的情感咨询助手
+
+- ✅ 智能对话（基础/智能/RAG 三种模式）
+- ✅ 自动生成结构化恋爱报告
+- ✅ RAG 知识库增强回答
+- ✅ 智能降级策略
+- ✅ 报告下载和分享
+
+</td>
+<td width="50%">
+
+#### 🤖 AI 超级智能体 (Manus)
+
+具备深度思考能力的全能助手
+
+- ✅ DeepSeek 风格的思考过程展示
+- ✅ 完整的 ReAct 循环（Think-Act-Observe）
+- ✅ 14+ 工具调用（搜索/文件/邮件/PDF等）
+- ✅ MCP 协议集成（高德地图 15 个工具）
+- ✅ 防死循环检测和超时控制
+
+</td>
+</tr>
+</table>
+
+### 🌟 为什么选择这个项目？
+
+| 特点            | 说明                                        |
+| --------------- | ------------------------------------------- |
+| 📚 **学习友好** | 代码注释详细，架构清晰，适合 Spring AI 入门 |
+| 🏗️ **架构完整** | 分层架构 + Agent 模式 + RAG + 工具调用      |
+| 🎯 **生产级别** | 包含异常处理、日志、监控、防护机制          |
+| 📝 **文档完善** | README、代码注释、架构图一应俱全            |
+| 💼 **简历项目** | 技术栈新颖，功能完整，面试加分项            |
+| 🚀 **快速部署** | Docker Compose 一键启动                     |
 
 ---
 
 ## ✨ 功能特性
-
-
 
 ### AI 恋爱大师
 
@@ -205,7 +289,7 @@ docker-compose -f docker-compose.local.yml up --build
 #### 2. 克隆项目
 
 ```bash
-git clone https://gitee.com/monks-offering/Super-ai-agent.git
+git clone https://github.com/muonuo/Super-ai-agent.git
 cd Super-ai-agent
 ```
 
@@ -245,7 +329,7 @@ spring:
   # AI 配置（必需）
   ai:
     dashscope:
-      api-key: 你的阿里云 DashScope API Key  # 在 https://dashscope.console.aliyun.com/ 获取
+      api-key: 你的阿里云 DashScope API Key # 在 https://dashscope.console.aliyun.com/ 获取
 
 # PostgreSQL 配置
 pgvector:
@@ -256,13 +340,14 @@ pgvector:
 
 # 可选配置
 search-api:
-  tavily-api-key: 你的 Tavily API Key  # 用于网络搜索
+  tavily-api-key: 你的 Tavily API Key # 用于网络搜索
 qq-email:
   from: 你的 QQ 邮箱
-  auth-code: 你的 QQ 邮箱授权码  # 用于发送恋爱报告
+  auth-code: 你的 QQ 邮箱授权码 # 用于发送恋爱报告
 ```
 
 > 💡 **获取 DashScope API Key**：
+>
 > 1. 访问 https://dashscope.console.aliyun.com/
 > 2. 注册/登录阿里云账号
 > 3. 开通 DashScope 服务
@@ -296,6 +381,7 @@ npm run dev
 #### 7. 访问应用
 
 打开浏览器访问：
+
 - **前端首页**：http://localhost:5173
 - **后端 Swagger UI**：http://localhost:8123/api/swagger-ui.html
 - **后端 API 文档**：http://localhost:8123/api/v3/api-docs
@@ -310,7 +396,7 @@ npm run dev
 
 ```yaml
 server:
-  port: 8123  # 改为其他端口，如 8124
+  port: 8123 # 改为其他端口，如 8124
 ```
 
 ### Q2: 数据库连接失败
@@ -352,6 +438,7 @@ mvn -version
 ```
 
 升级 Maven：
+
 ```bash
 # macOS
 brew install maven
@@ -497,14 +584,16 @@ AI：[展示思考过程]
 
 ## 📞 联系方式
 
-- 项目地址：[Gitee](https://gitee.com/monks-offering/Super-ai-agent)
-- 问题反馈：[Issues](https://gitee.com/monks-offering/Super-ai-agent/issues)
+- GitHub: [@muonuo](https://github.com/muonuo)
+- 项目地址: [Super-ai-agent](https://github.com/muonuo/Super-ai-agent)
+- 问题反馈: [Issues](https://github.com/muonuo/Super-ai-agent/issues)
 
 ---
 
 <div align="center">
+
 **如果这个项目对你有帮助，请给一个 ⭐ Star！**
 
-Made with ❤️ by [Monuo]
+Made with ❤️ by [Monuo](https://github.com/muonuo)
 
 </div>

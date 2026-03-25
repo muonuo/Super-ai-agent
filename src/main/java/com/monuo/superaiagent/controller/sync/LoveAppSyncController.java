@@ -3,6 +3,7 @@ package com.monuo.superaiagent.controller.sync;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.monuo.superaiagent.app.LoveApp;
 import com.monuo.superaiagent.app.LoveApp.LoveReport;
+import com.monuo.superaiagent.service.LoveAppService;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,7 +18,10 @@ import org.springframework.web.bind.annotation.RestController;
 public class LoveAppSyncController {
 
     @Resource
-    private LoveApp loveApp;
+    private LoveAppService loveAppService;
+    
+    @Resource
+    private LoveApp loveApp; // 保留用于 tools 和 mcp 接口
 
     /**
      * 基础同步对话
@@ -25,11 +29,12 @@ public class LoveAppSyncController {
      *
      * @param message 用户消息
      * @param chatId  对话ID
+     * @param enableTools 是否启用工具调用
      * @return AI回答
      */
     @GetMapping("/chat")
-    public String doChat(String message, String chatId) {
-        return loveApp.doChat(message, chatId);
+    public String doChat(String message, String chatId, Boolean enableTools) {
+        return loveAppService.chat(message, chatId, enableTools != null && enableTools);
     }
 
     /**
@@ -38,11 +43,12 @@ public class LoveAppSyncController {
      *
      * @param message 用户消息
      * @param chatId  对话ID
+     * @param enableTools 是否启用工具调用
      * @return AI回答（基于知识库）
      */
     @GetMapping("/rag")
-    public String doChatWithRag(String message, String chatId) {
-        return loveApp.doChatWithRag(message, chatId);
+    public String doChatWithRag(String message, String chatId, Boolean enableTools) {
+        return loveAppService.chatWithRag(message, chatId, enableTools != null && enableTools);
     }
 
     /**
@@ -52,11 +58,12 @@ public class LoveAppSyncController {
      *
      * @param message 用户消息
      * @param chatId  对话ID
+     * @param enableTools 是否启用工具调用
      * @return AI回答
      */
     @GetMapping("/smart")
-    public String doChatWithSmart(String message, String chatId) {
-        return loveApp.doChatWithRagFallback(message, chatId);
+    public String doChatWithSmart(String message, String chatId, Boolean enableTools) {
+        return loveAppService.smartChat(message, chatId, enableTools != null && enableTools);
     }
 
     /**
@@ -69,7 +76,7 @@ public class LoveAppSyncController {
      */
     @GetMapping("/report")
     public String doChatWithReport(String message, String chatId) throws Exception {
-        LoveReport loveReport = loveApp.doChatWithReport(message, chatId);
+        LoveReport loveReport = loveAppService.generateReport(message, chatId);
         return new ObjectMapper().writeValueAsString(loveReport);
     }
 

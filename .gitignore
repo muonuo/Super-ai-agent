@@ -146,6 +146,7 @@ super-ai-agent-web/.claude/
 *.md
 # 只保留项目核心文档
 !README.md
+!README_EN.md
 !CHANGELOG.md
 !CONTRIBUTING.md
 !LICENSE.md
@@ -154,6 +155,14 @@ super-ai-agent-web/.claude/
 docs/
 # 但保留部署文档（README 中引用）
 !docs/DEPLOYMENT.md
+# 保留 docs/images 目录下的所有图片文件（用于 README 展示）
+!docs/images/
+!docs/images/*.jpg
+!docs/images/*.jpeg
+!docs/images/*.png
+!docs/images/*.gif
+!docs/images/*.svg
+!docs/images/README.md
 # 保留 RAG 知识库文档
 !src/main/resources/document/
 !src/main/resources/document/*.md
@@ -162,6 +171,7 @@ docs/
 # AI 和 MCP 相关
 # ============================================
 .claude/
+.kiro/
 mcp-servers.local.json
 
 # ============================================

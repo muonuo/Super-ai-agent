@@ -1,6 +1,6 @@
 package com.monuo.superaiagent.controller.stream;
 
-import com.monuo.superaiagent.app.LoveApp;
+import com.monuo.superaiagent.service.LoveAppService;
 import jakarta.annotation.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
@@ -21,7 +21,7 @@ import java.io.IOException;
 public class LoveAppStreamController {
 
     @Resource
-    private LoveApp loveApp;
+    private LoveAppService loveAppService;
 
     /**
      * 基础流式对话
@@ -29,11 +29,12 @@ public class LoveAppStreamController {
      *
      * @param message 用户消息
      * @param chatId  对话ID
+     * @param enableTools 是否启用工具调用
      * @return 流式AI回答
      */
     @GetMapping(value = "/chat/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> doChatByStream(String message, String chatId) {
-        return loveApp.doChatByStream(message, chatId);
+    public Flux<String> doChatByStream(String message, String chatId, Boolean enableTools) {
+        return loveAppService.chatStream(message, chatId, enableTools != null && enableTools);
     }
 
     /**
@@ -41,11 +42,12 @@ public class LoveAppStreamController {
      *
      * @param message
      * @param chatId
+     * @param enableTools 是否启用工具调用
      * @return
      */
     @GetMapping(value = "/chat/server_sent_event")
-    public Flux<ServerSentEvent<String>> doChatWithLoveAppServerSentEvent(String message, String chatId) {
-        return loveApp.doChatByStream(message, chatId)
+    public Flux<ServerSentEvent<String>> doChatWithLoveAppServerSentEvent(String message, String chatId, Boolean enableTools) {
+        return loveAppService.chatStream(message, chatId, enableTools != null && enableTools)
                 .map(chunk -> ServerSentEvent.<String>builder()
                         .data(chunk)
                         .build());
@@ -56,14 +58,15 @@ public class LoveAppStreamController {
      *
      * @param message
      * @param chatId
+     * @param enableTools 是否启用工具调用
      * @return
      */
     @GetMapping(value = "/chat/sse_emitter")
-    public SseEmitter doChatWithLoveAppServerSseEmitter(String message, String chatId) {
+    public SseEmitter doChatWithLoveAppServerSseEmitter(String message, String chatId, Boolean enableTools) {
         // 创建一个超时时间较长的 SseEmitter
         SseEmitter sseEmitter = new SseEmitter(180000L); // 3 分钟超时
         // 获取 Flux 响应式数据流并且直接通过订阅推送给 SseEmitter
-        loveApp.doChatByStream(message, chatId)
+        loveAppService.chatStream(message, chatId, enableTools != null && enableTools)
                 .subscribe(chunk -> {
                     try {
                         sseEmitter.send(chunk);
@@ -81,11 +84,12 @@ public class LoveAppStreamController {
      *
      * @param message 用户消息
      * @param chatId  对话ID
+     * @param enableTools 是否启用工具调用
      * @return 流式AI回答（基于知识库）
      */
     @GetMapping(value = "/rag", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> doChatWithRagByStream(String message, String chatId) {
-        return loveApp.doChatByStreamWithRag(message, chatId);
+    public Flux<String> doChatWithRagByStream(String message, String chatId, Boolean enableTools) {
+        return loveAppService.chatWithRagStream(message, chatId, enableTools != null && enableTools);
     }
 
     /**
@@ -95,10 +99,11 @@ public class LoveAppStreamController {
      *
      * @param message 用户消息
      * @param chatId  对话ID
+     * @param enableTools 是否启用工具调用
      * @return 流式AI回答
      */
     @GetMapping(value = "/smart", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> doChatByStreamSmart(String message, String chatId) {
-        return loveApp.doChatByStreamSmart(message, chatId);
+    public Flux<String> doChatByStreamSmart(String message, String chatId, Boolean enableTools) {
+        return loveAppService.smartChatStream(message, chatId, enableTools != null && enableTools);
     }
 }
