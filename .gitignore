@@ -151,11 +151,11 @@ super-ai-agent-web/.claude/
 !CONTRIBUTING.md
 !LICENSE.md
 
-# 排除所有 docs 目录（开发过程文档）
+# docs 目录默认排除，但保留以下内容
 docs/
-# 但保留部署文档（README 中引用）
 !docs/DEPLOYMENT.md
-# 保留 docs/images 目录下的所有图片文件（用于 README 展示）
+!docs/GITHUB_SETUP.md
+!docs/MARKDOWN_RENDERING.md
 !docs/images/
 !docs/images/*.jpg
 !docs/images/*.jpeg
