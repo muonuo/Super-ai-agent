@@ -27,13 +27,13 @@
 <p align="center">
   <img src="docs/images/首页.jpg" alt="首页" width="800"/>
   <br/>
-  <em>首页 - 选择你的AI助手</em>
+  <em>首页 - 选择你的 AI 助手</em>
 </p>
 
 **功能展示：**
 
 - ✅ 简洁现代的界面设计
-- ✅ 两大AI应用可供选择
+- ✅ 两大 AI 应用可供选择
 - ✅ 快速访问恋爱大师和超级智能体
 - ✅ 响应式布局，适配所有设备
 
@@ -47,8 +47,8 @@
 
 **功能展示：**
 
-- ✅ 自然的纯文本对话，无Markdown格式干扰
-- ✅ 三种对话模式：基础对话、智能模式（推荐）、RAG问答
+- ✅ 自然的纯文本对话，无 Markdown 格式干扰
+- ✅ 三种对话模式：基础对话、智能模式（推荐）、RAG 问答
 - ✅ 功能增强选项：恋爱报告生成、工具调用
 - ✅ 会话管理：新建对话、重命名、删除
 - ✅ 实时流式输出，打字机效果
@@ -63,10 +63,10 @@
 
 **功能展示：**
 
-- ✅ Gemini风格的思考过程展示（可折叠）
+- ✅ Gemini 风格的思考过程展示（可折叠）
 - ✅ 实时显示思考步骤和思考时间
-- ✅ 14+ 工具自动调用（搜索、文件、邮件、PDF等）
-- ✅ MCP协议集成（高德地图15个工具）
+- ✅ 14+ 工具自动调用（搜索、文件、邮件、PDF 等）
+- ✅ MCP 协议集成（高德地图 15 个工具）
 - ✅ 智能问题分类（简单问题直接回答，复杂问题深度思考）
 
 ---
@@ -100,7 +100,7 @@ Super AI Agent 是一个**生产级的 AI 智能对话平台**，展示了如何
 
 - ✅ DeepSeek 风格的思考过程展示
 - ✅ 完整的 ReAct 循环（Think-Act-Observe）
-- ✅ 14+ 工具调用（搜索/文件/邮件/PDF等）
+- ✅ 14+ 工具调用（搜索/文件/邮件/PDF 等）
 - ✅ MCP 协议集成（高德地图 15 个工具）
 - ✅ 防死循环检测和超时控制
 
@@ -528,7 +528,7 @@ public class ToolRegistration {
 ### AI 恋爱大师
 
 ```
-用户：我和女朋友在一起3年了，最近感觉她对我有点冷淡，该怎么办？
+用户：我和女朋友在一起 3 年了，最近感觉她对我有点冷淡，该怎么办？
 
 AI：[智能模式 + 恋爱报告]
 1. 先进行详细的对话分析
@@ -585,8 +585,8 @@ AI：[展示思考过程]
 ## 📞 联系方式
 
 - GitHub: [@muonuo](https://github.com/muonuo)
-- 项目地址: [Super-ai-agent](https://github.com/muonuo/Super-ai-agent)
-- 问题反馈: [Issues](https://github.com/muonuo/Super-ai-agent/issues)
+- 项目地址：[Super-ai-agent](https://github.com/muonuo/Super-ai-agent)
+- 问题反馈：[Issues](https://github.com/muonuo/Super-ai-agent/issues)
 
 ---
 
