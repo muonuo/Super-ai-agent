@@ -18,7 +18,7 @@ services:
       POSTGRESQL_USERNAME: postgres
       POSTGRESQL_PASSWORD: postgres123
       # AI API Key
-      DASHSCOPE_API_KEY: xxx
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY}
       # 其他配置
       SEARCH_API_KEY: ${SEARCH_API_KEY}
       TAVILY_SEARCH_API_KEY: ${TAVILY_SEARCH_API_KEY}
@@ -37,7 +37,7 @@ services:
     ports:
       - "5123:5123"
     volumes:
-      - nginx_data:/etc/nginx/conf.d/default.conf
+      - ./super-ai-agent-web/nginx.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - app
     networks:
@@ -53,8 +53,8 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
-      - scheme_data:/docker-entrypoint-initdb.d/schema.sql
+      - /你的宿主机目录/super-ai-agent-data/mysql/data/:/var/lib/mysql
+      - ./src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     networks:
       - super-ai-network
     healthcheck:
@@ -74,7 +74,8 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:var/lib/postgresql/data
+      - /你的宿主机目录/super-ai-agent-data/postgresql/data/:/var/lib/postgresql/data/
+      - ./src/main/resources/pgvector.sql:/docker-entrypoint-initdb.d/pgvector.sql
     networks:
       - super-ai-network
     healthcheck:
@@ -88,12 +89,4 @@ networks:
   super-ai-network:
     driver: bridge
 
-volumes:
-  nginx_data: 
-    driver: /xxx/super-ai-agent-data/nginx/
-  scheme_data:
-   driver:  /xxx/super-ai-agent-data/sql/
-  mysql_data: 
-   driver: /xxx/super-ai-agent-data/mysql/data/
-  postgres_data:
-   driver:  /xxx/super-ai-agent-data/postgresql/data/
+
