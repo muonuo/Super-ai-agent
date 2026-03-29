@@ -12,6 +12,6 @@ COPY --from=build /app/dist /usr/share/nginx/html
 # 复制自定义 nginx 配置替换默认配置
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 # 暴露端口
-EXPOSE 80
+EXPOSE 5123
 # 启动 Nginx
 CMD ["nginx", "-g", "daemon off;"]

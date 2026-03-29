@@ -57,7 +57,16 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.8.13</version> <!-- 请检查最新版本 -->
+        </dependency>
+        
         <!-- 阿里云百练、灵积大模型 SDK，用于调用通义千问等大模型服务 -->
         <dependency>
             <groupId>com.alibaba</groupId>
@@ -139,13 +148,6 @@
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-extra</artifactId>
             <version>5.8.40</version>
-        </dependency>
-
-        <!-- Knife4j API 文档增强工具，基于 Swagger/OpenAPI 的接口文档 UI -->
-        <dependency>
-            <groupId>com.github.xiaoymin</groupId>
-            <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
-            <version>4.5.0</version>
         </dependency>
 
         <!-- MyBatis-Plus 增强型 ORM 框架，简化数据库 CRUD 操作 -->
