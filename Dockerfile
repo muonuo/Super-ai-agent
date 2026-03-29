@@ -23,7 +23,11 @@ FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
 # 安装必要的系统库（用于 PostgreSQL JDBC 等）
-RUN apk add --no-cache libstdc++ curl
+RUN apk update && apk add --no-cache libstdc++ curl bash nodejs npm 
+# RUN apk add --no-cache nodejs 
+# 验证安装
+RUN node -v
+RUN npx -v
 
 # 从构建阶段复制 jar 包
 COPY --from=builder /app/target/Super-ai-agent-0.0.1-SNAPSHOT.jar app.jar

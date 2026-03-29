@@ -1,8 +1,8 @@
 spring:
   application:
     name: Super-ai-agent
-  profiles:
-    active: ${SPRING_PROFILES_ACTIVE:local}
+  # profiles:
+  #   active: ${SPRING_PROFILES_ACTIVE:local}
   ai:
     retry:
       max-attempts: 1
@@ -28,7 +28,7 @@ spring:
   datasource:
     jdbc-url: ${MYSQL_URL:jdbc:mysql://localhost:3306/super_ai_agent?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
     username: ${MYSQL_USERNAME:root}
-    password: ${MYSQL_PASSWORD:1234}
+    password: ${MYSQL_PASSWORD:root123}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 5
@@ -45,11 +45,15 @@ pgvector:
   ai:
     vectorstore:
       pgvector:
+      # 【核心开关】设置为 true 开启自动建表和扩展
+        initialize-schema: true 
         index-type: HNSW
         dimensions: 1024
         distance-type: COSINE_DISTANCE
         max-document-batch-size: 10000
-        initialize-schema: true
+        # 表名配置
+        table-name: vector_store
+        schema-name: public
 
 mybatis-plus:
   configuration:
@@ -71,17 +75,18 @@ springdoc:
     path: /swagger-ui.html
     tags-sorter: alpha
     operations-sorter: alpha
+    # 尝试打开 UI 时是否禁用缓存
+    disable-swagger-default-url: true
+    # 是否显示操作 ID（用于代码生成）
+    display-operation-id: true
   api-docs:
     path: /v3/api-docs
   group-configs:
     - group: "default"
       paths-to-match: "/**"
       packages-to-scan: com.monuo.superaiagent.controller
-
-knife4j:
-  enable: true
-  setting:
-    language: zh_cn
+  # 是否展示 Actuator 端点（如果你集成了 actuator）
+  show-actuator: true
 
 search-api:
   api-key: ${SEARCH_API_KEY:}
@@ -97,4 +102,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: "health,info"  # 暴露所有端点（包括 health, info 等）
+  endpoint:
+    health:
+      show-details: always # 显示健康检查的详细信息
